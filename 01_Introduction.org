@@ -2,6 +2,9 @@
 #+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
 
 * Introduction
+:PROPERTIES:
+  :CUSTOM_ID: Introduction
+:END:
 
 /Warning./ This book is still under construction. It aims to serve as
 both an introduction and a reference manual for programming in the
@@ -108,14 +111,29 @@ put_str "hello world\n"
 
 vm_eval hello_world
 #+END_SRC
-We will explain the data type =IO unit= in Chapter ??. Although this
-program has a real world side effect of sending output to the screen
-when run, that effect is invisible to the formal foundation. From the
-latter's perspective, the type constructor =IO= and the functions
-=put_str= and =get_str= are entirely opaque, objects about which that
-the axiomatic system has nothing to say. The =print axioms= command
-shows that the expression =hello world= depends on the contants =IO=
-and =put_str=, which have been forcibly added to the axiomatic system.
+The next example prints the first 100 squares:
+#+BEGIN_SRC lean
+import system.IO
+open nat
+
+definition print_squares : ℕ → IO unit
+| 0        := return ()
+| (succ n) := print_squares n >>
+              put_str (to_string n ++ "^2 = " ++ 
+                       to_string (n * n) ++ "\n")
+
+vm_eval print_squares 100
+#+END_SRC
+
+We will explain the data type =IO unit= in Chapter [[file:07_Monads::#Monads][Monads]]. Although
+this program has a real world side effect of sending output to the
+screen when run, that effect is invisible to the formal
+foundation. From the latter's perspective, the type constructor =IO=
+and the functions =put_str= and =get_str= are entirely opaque, objects
+about which that the axiomatic system has nothing to say. The =print
+axioms= command shows that the expression =hello world= depends on the
+contants =IO= and =put_str=, which have been forcibly added to the
+axiomatic system.
 #+BEGIN_SRC lean
 import system.IO
 
@@ -158,6 +176,24 @@ if n > 100 then n - 10 else m91 (m91 (n + 11))
 vm_eval m91 10
 vm_eval m91 100
 vm_eval m91 1000
+#+END_SRC
+We can print out the first 120 values of =m91=:
+#+BEGIN_SRC lean
+import system.IO
+open nat
+
+meta_definition m91 (n : ℕ) : ℕ :=
+if n > 100 then n - 10 else m91 (m91 (n + 11))
+
+-- BEGIN
+meta_definition print_m91 : ℕ → IO unit
+| 0        := return ()
+| (succ n) := print_m91 n >>
+              put_str ("m91 " ++ to_string n ++ " = " ++ 
+                       to_string (m91 n) ++ "\n")
+
+vm_eval print_m91 120
+-- END
 #+END_SRC
 Of course, such uses of recursion are dangerous.
 #+BEGIN_SRC lean
