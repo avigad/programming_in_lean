@@ -5,13 +5,13 @@
 \lstdefinelanguage{lean} {
 
 % Anything betweeen $ becomes LaTeX math mode
-mathescape=true,
+mathescape=false,
 % Comments may or not include Latex commands
 texcl=false,
 
 % keywords, list taken from lean-syntax.el
 morekeywords=[1]{
-import, prelude, tactic_hint, protected, private, noncomputable, definition, renaming,
+import, prelude, tactic_hint, protected, private, noncomputable, definition, meta_definition, renaming,
 hiding, exposing, parameter, parameters, begin, begin+, proof, qed, conjecture, constant, constants,
 hypothesis, lemma, corollary, variable, variables, premise, premises, theory,
 print, theorem, proposition, example, abbreviation, abstract,
@@ -147,6 +147,7 @@ literate=
 
 {↦}{{\ensuremath{\mapsto}}}1
 {→}{{\ensuremath{\rightarrow}}}1
+{←}{{\ensuremath{\leftarrow}}}1
 {↔}{{\ensuremath{\leftrightarrow}}}1
 {⇒}{{\ensuremath{\Rightarrow}}}1
 {⟹}{{\ensuremath{\Longrightarrow}}}1
