@@ -1,0 +1,11 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Writing Tactics
+:PROPERTIES:
+  :CUSTOM_ID: Writing_Tactics
+:END:
+
+[Start with exprs, pexprs, names, ... Getting context and target, basic
+tactics. =repeat, first, etc.=]
+

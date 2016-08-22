@@ -1,0 +1,10 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Monads
+:PROPERTIES:
+  :CUSTOM_ID: Monads
+:END:
+
+[An introduction to monads, with some examples: option (maybe), list
+(nondeterministic), state, io. Discuss the =alternative= class.]

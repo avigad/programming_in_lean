@@ -1,0 +1,11 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Data Structures
+:PROPERTIES:
+  :CUSTOM_ID: Data_Structures
+:END:
+
+[Discuss the most common and useful structures, pairs, lists, enumeration 
+types, structures. Introduce subtypes with some simple examples, without
+including too much detail about propositions and proofs.]

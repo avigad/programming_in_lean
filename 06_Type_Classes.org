@@ -1,0 +1,10 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Type Classes
+:PROPERTIES:
+  :CUSTOM_ID: Type_Classes
+:END:
+
+[Explain how to make things instances of common type classes,
+including arithmetic operations, string formatting operations, etc.]

@@ -1,0 +1,10 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* The Tactic Library
+:PROPERTIES:
+  :CUSTOM_ID: Lean_Tactic_Library
+:END:
+
+[Document all the useful things available for writing tactics: the
+simplifier API, red black trees, pattern matching, ...]

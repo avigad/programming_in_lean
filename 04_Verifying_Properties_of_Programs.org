@@ -1,0 +1,13 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Verifying Properties of Programs
+:PROPERTIES:
+  :CUSTOM_ID: Verifying_Properties_of_Programs
+:END:
+
+[This chapter will have to assume some familiarity with Lean as a
+proof assistant. Give some natural examples, for example, proving
+properties of functions of lists, sorting routines, properties of the
+extended gcd. Discuss two styles: separating functions and properties,
+and combining them, using subtypes.]

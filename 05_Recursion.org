@@ -1,0 +1,11 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Recursion
+:PROPERTIES:
+  :CUSTOM_ID: Recursion
+:END:
+
+[Explain Lean's function definition package, how to use well-founded
+recursion, and how to prove things about general recursive
+functions. Explain how to define and use new inductive types.]

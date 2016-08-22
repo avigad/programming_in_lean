@@ -1,0 +1,14 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Programming Basics
+:PROPERTIES:
+  :CUSTOM_ID: Programming_Basics
+:END:
+
+[This chapter should be a straightforward introduction to functional
+programming, with examples using natural numbers, lists, strings, and
+so on. Cover if ... then ... else statements, simple instances of
+matching and recursion. A fuller treatment of matching and recursion
+will be given in Chapter ??]
+

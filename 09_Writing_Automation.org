@@ -1,0 +1,11 @@
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+
+* Writing Automation
+:PROPERTIES:
+  :CUSTOM_ID: Writing_Automation
+:END:
+
+[Give a hands-on example, writing a simple tableau prover for classical
+propositional logic].
+
