@@ -1,153 +1,303 @@
-#+Title: Theorem Proving in Lean
-#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[http://www.cs.cmu.edu/~soonhok][Soonho Kong]]
+#+Title: Programming in Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
 
 * Introduction
 
-** Computers and Theorem Proving
+/Warning./ This book is still under construction. It aims to serve as
+both an introduction and a reference manual for programming in the
+Lean theorem prover.
 
-/Formal verification/ involves the use of logical and computational
-methods to establish claims that are expressed in precise mathematical
-terms. These can include ordinary mathematical theorems, as well as
-claims that pieces of hardware or software, network protocols, and
-mechanical and hybrid systems meet their specifications. In practice,
-there is not a sharp distinction between verifying a piece of
-mathematics and verifying the correctness of a system: formal
-verification requires describing hardware and software systems in
-mathematical terms, at which point establishing claims as to their
-correctness becomes a form of theorem proving. Conversely, the proof
-of a mathematical theorem may require a lengthy computation, in which
-case verifying the truth of the theorem requires verifying that the
-computation does what it is supposed to do.
+We are making this material public now now because currently it is the
+only existing documentation for many of the specifics of the Lean
+programming language and its API, and we are hoping that the
+information will be useful to brave souls experimenting with it at
+this early stage. Most of the chapters are currently only stubs, but
+comments and feedback on the material that is available will be
+helpful.
 
-The gold standard for supporting a mathematical claim is to provide a
-proof, and twentieth-century developments in logic show most if not
-all conventional proof methods can be reduced to a small set of axioms
-and rules in any of a number of foundational systems. With this
-reduction, there are two ways that a computer can help establish a
-claim: it can help find a proof in the first place, and it can help
-verify that a purported proof is correct.
+Most of the examples here will not run under the current version of
+Lean (which is what is running in the online version). To try them
+out, you will have to build the version of Lean found in the lean3
+branch of the Github repository. Remember that you can run the
+examples from Emacs using C-c C-x.
 
-/Automated theorem proving/ focuses on the "finding"
-aspect. Resolution theorem provers, tableau theorem provers, fast
-satisfiability solvers, and so on provide means of establishing the
-validity of formulas in propositional and first-order logic. Other
-systems provide search procedures and decision procedures for specific
-languages and domains, such as linear or nonlinear expressions over
-the integers or the real numbers. Architectures like SMT
-("satisfiability modulo theories") combine domain-general search
-methods with domain-specific procedures. Computer algebra systems and
-specialized mathematical software packages provide means of
-carrying out mathematical computations, establishing mathematical
-bounds, or finding mathematical objects. A calculation can be viewed
-as a proof as well, and these systems, too, help establish
-mathematical claims.
+** Lean as a Programming Language
 
-Automated reasoning systems strive for power and efficiency, often at
-the expense of guaranteed soundness. Such systems can have bugs, and
-it can be difficult to ensure that the results they deliver are
-correct. In contrast, /interactive theorem proving/ focuses on the
-"verification" aspect of theorem proving, requiring that every claim
-is supported by a proof in a suitable axiomatic foundation. This sets
-a very high standard: every rule of inference and every step of a
-calculation has to be justified by appealing to prior definitions and
-theorems, all the way down to basic axioms and rules. In fact, most
-such systems provide fully elaborated "proof objects" that can be
-communicated to other systems and checked independently. Constructing
-such proofs typically requires much more input and interaction from
-users, but it allows us to obtain deeper and more complex proofs.
+This book can be viewed as a companion to /Theorem Proving in Lean/,
+which presents Lean as a system for building mathematical libraries
+and stating and proving mathematical theorems.  From that perspective,
+the point of Lean is to implement a formal axiomatic framework in
+which one can define mathematical objects and reason about them.
 
-The /Lean Theorem Prover/ aims to bridge the gap between interactive
-and automated theorem proving, by situating automated tools and
-methods in a framework that supports user interaction and the
-construction of fully specified axiomatic proofs. The goal is to
-support both mathematical reasoning and reasoning about complex
-systems, and to verify claims in both domains.
+As noted in that book, however, expressions in Lean have a
+computational interpretation, which is to say, they can be
+/evaluated/. As long as it is defined in the computational fragment of
+Lean's foundational language, any closed term of type =nat= -- that
+is, any term of type =nat= without free variables -- evaluates to a
+numeral. Similarly, any closed term of type =list nat= evaluates to a
+list of numerals, and any closed term of type =bool= evaluates
+either to the boolean value =tt=, for "true," or =ff=, for "false."
 
-** About Lean
+This provides another perspective on Lean: instead of thinking of it
+as a theorem prover whose language just happens to have a
+computational interpretation, think of it as a programming language
+that just happens to come equipped with a rich specification language
+and an interactive environment for proving that programs meet their
+specifications. The specification language and proof system are quite
+powerful, rich enough, in fact, to include all conventional
+mathematics.
 
-The /Lean/ project was launched by Leonardo de Moura at Microsoft
-Research Redmond in 2012. It is an ongoing, long-term effort, and
-much of the potential for automation will be realized only gradually
-over time. Lean is released under the Apache 2.0 license, a permissive
-open source license that permits others to use and extend the code and
-mathematical libraries freely.
+We will see that Lean's underlying logical framework, the Calculus of
+Inductive Constructions, constitutes a surprisingly good programming
+language. It is expressive enough to define all sorts of data
+structures, and it supports powerful abstractions. Programs written in
+the language can be evaluated efficiently by Lean's virtual-machine
+interpreter or translated automatically to C++ and compiled.
 
-There are currently two ways to use Lean. The first is to run it from
-the web: a Javascript version of Lean, a standard library of
-definitions and theorems, and an editor are actually downloaded to
-your browser and run there. This provides a quick and convenient way to
-begin experimenting with the system.
+Viewed from a computational perspective, the Calculus of Inductive
+Construtions is an instance of a purely functional programming
+language. This means that a program in Lean is simply an expression
+whose value is determined compositionally from the values of the other
+expressions it refers to, independent of any sort of ambient state of
+computation. There is no notion of storing a result in memory or
+changing the value of a global variable; computation is just
+evaluation of expressions. This paradigm makes it easier to reason
+about programs and verify their correctness. At the same time, we will
+see that Lean incorporates concepts and abstractions that make it
+feasible to use this paradigm in practice.
 
-The second way to use Lean is to install and run it natively on your
-computer. The native version is much faster than the web version, and
-is more flexible in other ways, too. It comes with an Emacs mode that
-offers powerful support for writing and debugging proofs, and is much
-better suited for serious use.
+The underlying foundational framework imposes one restriction that is
+alien to most programming languages, namely, that every program is
+terminating. So, for example, every "while" loop has to be explicitly
+bounded, though, of course, we can consider the result of iterating an
+arbitrary computation =n= times for any given natural number =n=. We
+will see that Lean provides flexible mechanisms for structural and
+well-founded recursion, allowing us to to define functions in natural
+ways. At the same, the system provides complementary mechanisms for
+proving claims, using inductive principles that capture the structure
+of the function definitions.
 
-** About this Book
+** Examples
 
-This book is designed to teach you to develop and verify proofs in
-Lean. Much of the background information you will need in order to do
-this is not specific to Lean at all. To start with, we will explain
-the logical system that Lean is based on, a version of /dependent type
-theory/ that is powerful enough to prove almost any conventional
-mathematical theorem, and expressive enough to do it in a natural
-way. We will explain not only how to define mathematical objects and
-express mathematical assertions in dependent type theory, but also how
-to use it as a language for writing proofs. 
+For example...
 
-In fact, Lean supports two versions of dependent type theory. The
-first is a variant of a system known as the /Calculus of Inductive
-Constructions/\cite{Coquand1988,pfenning:paulin:mohring:89}, or
-/CIC/. This is the system used by Lean's standard library, and is the
-focus of this tutorial. The second version of dependent type theory
-implements an axiomatic framework for [[http://homotopytypetheory.org/][homotopy type theory]],
-which we will discuss in a later chapter.
+[Define something like factorial. Evaluate (use both =eval= and =vm_eval=).]
 
-Because fully detailed axiomatic proofs are so complicated, the
-challenge of theorem proving is to have the computer fill in as many
-of the details as possible. We will describe various methods to
-support this in dependent type theory. For example, we will discuss
-term rewriting, and Lean's automated methods for simplifying terms and
-expressions automatically. Similarly, we will discuss methods of
-/elaboration/ and /type inference/, which can be used to support
-flexible forms of algebraic reasoning.
+[Define operations on lists.]
 
-Finally, of course, we will discuss features that are specific to
-Lean, including the language with which you can communicate with the
-system, and the mechanisms Lean offers for managing complex theories
-and data.
+[Prove things, like ~length (reverse l) = reverse l~ or ~reverse
+(reverse l) = l~.]
 
-If you are reading this book within Lean's online tutorial system, you
-will see a copy of the Lean editor at right, with an output buffer
-beneath it. At any point, you can type things into the editor, press
-the "play" button, and see Lean's response. Notice that you can resize
-the various windows if you would like.
+** Input and Output
 
-Throughout the text you will find examples of Lean code like the one
-below:
+People often want to write programs that interact with the outside
+world, querying users for input and presenting them with output during
+the course of a computation. Lean's foundational framework has no
+model of "the real world," but Lean declares =get_str= and =put_str=
+commands to get an input string from the user and write an input
+string to output, respectively. Within the foundational system, these
+are treated as black box operations. But when programs are evaluated
+by Lean's virtual machine or when they are translated to C++, they
+have the expected behavior. Here, for example, is a program that
+prints "hello world":
 #+BEGIN_SRC lean
+import system.IO
+
+definition hello_world : IO unit :=
+put_str "hello world\n"
+
+vm_eval hello_world
+#+END_SRC
+We will explain the data type =IO unit= in Chapter ??. Although this
+program has a real world side effect of sending output to the screen
+when run, that effect is invisible to the formal foundation. From the
+latter's perspective, the type constructor =IO= and the functions
+=put_str= and =get_str= are entirely opaque, objects about which that
+the axiomatic system has nothing to say. The =print axioms= command
+shows that the expression =hello world= depends on the contants =IO=
+and =put_str=, which have been forcibly added to the axiomatic system.
+#+BEGIN_SRC lean
+import system.IO
+
+definition hello_world : IO unit :=
+put_str "hello world\n"
+
 -- BEGIN
-theorem and_commutative (p q : Prop) : p ∧ q → q ∧ p :=
-assume Hpq : p ∧ q,
-have Hp : p, from and.elim_left Hpq,
-have Hq : q, from and.elim_right Hpq,
-show q ∧ p, from and.intro Hq Hp
+print axioms hello_world
 -- END
 #+END_SRC
-Once again, if you are reading the book online, you will see a button
-that reads "try it yourself." Pressing the button copies the example
-into the Lean editor with enough surrounding context to make the
-example compile correctly, and then runs Lean. We recommend running
-the examples and experimenting with the code on your own as you work
-through the chapters that follow.
+In this way, we can prove properties of programs involving =IO= that
+do not depend in any way on the particular results of the input and
+output.
 
-** Acknowledgments
+# At some point, we can mention the possibility of extending Lean with
+# other axiomatically declared elements.
 
-This tutorial is an open access project maintained on Github. Many
-people have contributed to the effort, providing corrections,
-suggestions, examples, and text. We are grateful to Ulrik Buchholz,
-Nathan Carter, Amine Chaieb, Floris van Doorn, Anthony Hart, Sean
-Leather, Christopher John Mazey, Daniel Velleman, and Théo Zimmerman
-for their contributions, and we apologize to those whose names we have
-inadvertently omitted.
+** Metaprogramming in Lean
+
+Lean also allows /metaprograms/, which are Lean programs that involve
+objects and constructs that are not part of the axiomatic
+foundation. In particular:
+- Metaprograms can use arbitrary recursive calls, with no concern for
+  termination.
+- Metaprograms can access /metaconstants/, that is, primitive
+  functions and objects that are implemented internally in Lean and
+  are not meant to be trusted by the foundational framework.
+Such definitions can be introduced using the keyword =metadefinition=
+instead of =definition= and are marked for special treatment. In
+particular, because they are not part of the axiomatic foundation,
+they cannot appear as part of ordinary Lean definitions and theorems.
+
+For example, the following definition computes McCarthy's 91 function,
+without verifying that the computation terminates on all inputs
+(though, in fact, it does):
+#+BEGIN_SRC lean
+meta_definition m91 (n : ℕ) : ℕ :=
+if n > 100 then n - 10 else m91 (m91 (n + 11))
+
+vm_eval m91 10
+vm_eval m91 100
+vm_eval m91 1000
+#+END_SRC
+Of course, such uses of recursion are dangerous.
+#+BEGIN_SRC lean
+meta_definition foo : nat := foo + 1
+
+eval foo
+-- vm_eval foo
+#+END_SRC
+Evaluating =foo= using the kernel evaluator shows that the
+implementation is a bit of a hack; the term in the definition includes
+a macro which names =foo= itself. The virtual machine that evaluates
+foo goes further, and carries out the recursive call, repeating this
+until the process runs out of memory. It is a good thing that Lean
+will not allow =foo= to appear in a =theorem= or in an ordinary
+=definition=; if we could prove ~foo = foo + 1~ then, substracting
+=foo= from both sides, we could prove ~0 = 1~, and hence a
+contradiction.
+
+Although metaprograms can be used in various ways, its primary purpose
+is to provide a means of extending the functionality of Lean, within
+Lean itself. For example, we can use metaprograms to write new
+procedures, known as /tactics/, which help us construct proofs. This
+next example assumes you are familiar with the notion of a tactic, as
+described in /Theorem Proving in Lean/.
+
+The following code implements a tactic that, given any goal,
+repeatedly finds a hypothesis =H= of the form =A ∧ B=, and
+replaces it by hypotheses (with fresh names) for =A= and =B=.
+#+BEGIN_SRC lean
+open tactic monad expr
+
+-- TODO: put this in list?
+meta_definition forl {A B : Type} (l : list A) (f : A → B) : list B :=
+map f l
+
+-- TODO: put this in expr
+meta_definition head_symbol : expr → name
+| (const n a)      := n
+| (app e a)        := match (get_app_fn e) with
+                      | (const n l) := n
+                      | a           := `none
+                      end
+| (pi a₁ a₂ a₃ a₄) := `pi
+| a                := `none
+
+-- TODO: add this to tactic?
+-- assuming (P : T), create a fresh name H, and add H : P
+meta_definition assert_fact (P : expr) : tactic unit :=
+do n ← mk_fresh_name,
+   t ← infer_type P,
+   assertv n t P
+
+-- BEGIN
+meta_definition destruct_conjunctions : tactic unit :=
+repeat
+  (do l ← local_context,
+      first $ forl l (λ h,
+      do ht ← infer_type h,
+         if head_symbol ht = ``and then do
+            mk_mapp ``and.left [none, none, some h] >>= assert_fact,
+            mk_mapp ``and.right [none, none, some h] >>= assert_fact,
+            clear h
+         else failed))
+-- END
+#+END_SRC
+We will explain the details in Chapter ?, but, roughly speaking, the
+code repeats the following action until there is nothing left to do:
+get the list of hypotheses in the local context, find a hypothesis =H=
+whose type is a conjunction, add new hypotheses justified by =and.left
+H= and =and.right H= to the local context, and then delete =H=. We can
+then use =destruct_conjunctions= like any other Lean tactic.
+#+BEGIN_SRC lean
+open tactic monad expr
+
+-- TODO: put this in list?
+meta_definition forl {A B : Type} (l : list A) (f : A → B) : list B :=
+map f l
+
+-- TODO: put this in expr
+meta_definition head_symbol : expr → name
+| (const n a)      := n
+| (app e a)        := match (get_app_fn e) with
+                      | (const n l) := n
+                      | a           := `none
+                      end
+| (pi a₁ a₂ a₃ a₄) := `pi
+| a                := `none
+
+-- TODO: add this to tactic?
+-- assuming (P : T), create a fresh name H, and add H : P
+meta_definition assert_fact (P : expr) : tactic unit :=
+do n ← mk_fresh_name,
+   t ← infer_type P,
+   assertv n t P
+
+meta_definition destruct_conjunctions : tactic unit :=
+repeat
+  (do l ← local_context,
+    first $ forl l (λ h,
+      do ht ← infer_type h,
+         if head_symbol ht = ``and then do
+            mk_mapp ``and.left [none, none, some h] >>= assert_fact,
+            mk_mapp ``and.right [none, none, some h] >>= assert_fact,
+            clear h
+         else failed))
+
+-- BEGIN
+-- TODO: replace this by a begin...end block when they exist
+example (A B C : Prop) (H : (A ∧ B) ∧ (C ∧ A)) : C :=
+by do destruct_conjunctions >> assumption
+-- END
+#+END_SRC
+Note that the reason we can use such code to prove theorems without
+compromising the integrity of the formal system is that Lean's kernel
+always certifies the result. From a foundational point of view, we
+don't have to worry about the integrity of the code, only the
+integrity of the resulting proofs.
+
+** Overview of the contents
+
+To summarize, we can use Lean in any of the following ways:
+- as a programming language
+- as a system for verifying properties of programs
+- as a system for writing metaprograms, that is, programs that extend
+  the functionality of Lean itself
+
+Chapters ??-?? explain how to use Lean as a programming language. It
+will be helpful if you have some familiarity with the syntax and
+meaning of dependent type theory, for example, as presented in
+/Theorem Proving in Lean/ (henceforth /TPL/). But, if not, it is
+likely that you will be able to pick up the details as we
+proceed. Similarly, if you are familiar with functional programming,
+you will be able to move through the material more quickly, but we
+will try to keep the presentation below self contained.
+
+Chapters ?? and ?? deal with the task of proving things about
+programs. Once again, it will be helpful if you are familiar with the
+use of Lean as an interactive theorem prover as described in /TPL/,
+but if not you are encouraged to forge ahead and refer back to /TPL/
+as necessary.
+
+Finall, chapters ?? to ?? deal with metaprogramming aspects of Lean,
+and, in particular, writing tactics and automation.
