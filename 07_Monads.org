@@ -6,5 +6,599 @@
   :CUSTOM_ID: Monads
 :END:
 
-[An introduction to monads, with some examples: option (maybe), list
-(nondeterministic), state, io. Discuss the =alternative= class.]
+In this chapter, we will describe a powerful abstraction known as a
+/monad/. A monad is a type constructor =m : Type → Type= that comes
+equipped with two special operations, =return= and =bind=. If =A= is
+any type, think of =m A= as being a "virtual =A=," or, as some people
+describe it, "an =A= inside a box." 
+
+For a given monoid =m=, the function =return= has type =Π {A : Type},
+A → m A=. The idea is that for any element =a : A=, =return a=
+produces the virtual version of =a=, or puts =a= inside the box.
+
+Once we are inside the box, we cannot get out; there is no general way
+of taking an element of =m A= and obtaining an element of =A=. But the
+=bind= operation gives us a way of turning some operations on =A= into
+operations inside the monad. Specifically, for a given monad =m=, the
+function =bind= has type =Π {A B : Type}, m A → (A → m B) → m
+B=. Suppose we have a function =f= that, given any element =a : A=,
+produces a virtual element of =B=; in more prosaic terms, =f= has
+type =A → m B=. Suppose also that we have a virtual element of =A=, that
+is, =ma : m A=. If we could extract from =ma= a corresponding element
+=a= of =A=, we could apply =f= to it to get a virtual element of
+=B=. We cannot do that in general, but =bind= gives us a way of
+simulating the compound operation: it applies =f= directly "inside the
+box," and gives us an element of =m B=.
+
+As an example of how =bind= and =return= can be used, given any
+function =f : A → B=, we can get a function =map f : m A → m B= by
+defining =map f ma= to be =bind ma (λ a, return (f a)=. Roughly, given
+=ma : m A=, the =bind= reaches into the box, finds an associated =a=,
+and then puts =f a= back into the box.
+
+For another example, given any element =mma : m (m A)=, the expression
+=monad.bind mma id= has type =m A=. This means that even though we
+cannot in general extract an element of =B= from =m B=, we /can/ do it
+when =B= itself is a virtual type, =m A=. The expression =monad.bind
+mma id= reaches into the =m (m A)= box, catches hold of an element of
+=m A=, and simply leaves it in the =m A= box.
+
+If you have never come across the notion of a monad before, these
+operations will seem quite mysterious. But instances of =return= and
+=bind= arise in many natural ways, and the goal of this chapter is to
+show you some examples. Roughly, they arise in situations where =m= is
+a type construction with the property that functions in the ordinary
+realm of types can be transported, unformly, into functions in the
+realm of =m=-types. This should sound quite general, and so it is
+perhaps not that surprising that monads be instantiated in many
+different ways. The power of the abstraction is not only that it
+provides general functions and notation the can be used in all these
+various instantiations, but also that it provides a helpful way of
+thinking about what they all have in common.
+
+Lean implements the following common notation. First, we have the
+infix notation
+#+BEGIN_SRC lean_text
+ma >>= f
+#+END_SRC
+for =bind ma f=. Think of this as saying
+"take an element =a= out of the box, and send it to =f=." Remember, we
+are allowed to do that as long as the return type of =f= is of the
+form =m B=. We also have the infix notation, 
+#+BEGIN_SRC lean_text
+ma >> mb
+#+END_SRC 
+for =bind ma (λ a, mb)=. This takes an element =a= out of the box,
+ignores it entirely, and then returns =mb=. This is most useful in
+situations where the act of taking an element of the box can be viewed
+as inducing a change of state. In situations like that, you can think
+of ~ma >>= f~ as saying "do =ma=, take the result, and then send it to
+=f=." You can then think of of ~ma >> mb~ more simply as "do =ma=,
+then do =mb=." In this way, monads provide a way of simulating
+features of imperative programming languages in a functional
+setting. But, we will see, they do a lot more than that.
+
+Thinking of monads in terms of performing actions while computing
+results is quite powerful, and Lean provides notation to support that
+perspective. The expression
+#+BEGIN_SRC lean_text
+do a ← ma, t
+#+END_SRC
+is syntactic sugar for ~ma >>= (λ a, t)~. Here =t= is typically an
+expression that depends on =a=, and it should have type =m B= for some
+=B=. So you can read =do a ← ma, t= as reaching into the box,
+extracting an =a=, and then continuing the computation with
+=t=. Similarly, =do s, t= is syntactic sugar for =s >> t=, supporting
+the reading "do =s=, then do =t=." The notation supports iteration,
+so, for example, 
+#+BEGIN_SRC lean_text
+do a ← s, 
+   b ← t, 
+   f a b, 
+   return (g a b)
+#+END_SRC
+is syntactic sugar for
+#+BEGIN_SRC lean_text
+bind s (λ a, bind t (λ b, bind (f a b) (λ c, return (g a b)))). 
+#+END_SRC
+It supports the reading "do =s= and extract =a=, do =t= and
+extract =b=, do =f a b=, then return the value =g a b=."
+
+Incidentally, as you may have guessed, a monad is implemented as a
+type class in Lean. In other words, =return= really has type 
+#+BEGIN_SRC lean_text
+Π {m : Type → Type} [monad m] {A : Type}, A → m A},
+#+END_SRC
+and =bind= really has type 
+#+BEGIN_SRC lean_text
+Π {m : Type → Type} [monad m] {A B : Type}, m A → (A → m B) → m B.
+#+END_SRC
+In general, the relevant monad can be inferred from the expressions in
+which =bind= and =return= appear, and the monad structure is then
+inferred by type class inference.
+
+There is a constraint, namely that when we use monads all the types we
+apply the monad to have to live in the same type universe. When all
+the types in question appear as parameters to a definition, Lean's
+elaborator will infer that constraint. When we declare variables
+below, we will satisfy that constraint by explicitly putting them in
+the same universe.
+
+# TODO: explain universes somewhere? Or say more here?
+
+** The =option= monad
+
+The =option= constructor provides what is perhaps the simplest example
+of a monad. Recall that an element of =option A= is either of the form
+=some a= for some element =a : A=, or =none=. So an element =a=
+of =option A= is a "virtual =A=" in the sense of being either an
+element of =A= or an empty promise.
+
+The associated =return= is just =some=: given an element =a= of =A=,
+=some a= returns a virtual =A=. It is also clear that we cannot go in
+the opposite direction: given an element =ma : option A=, there is no
+way, in general, of producing an element of =A=. But we can simulate
+extraction of such an element as long as we are willing to stay in the
+virtual land of =options=, by defining =bind= as follows:
+#+BEGIN_SRC lean
+definition bind {A B : Type} (oa : option A) (f : A → option B) : 
+  option B :=
+match oa with
+| (some a) := f a
+| none     := none
+end
+#+END_SRC
+If the element =oa= is =some a=, we can simply apply =f= to =a=, and
+otherwise we simply return =none=. Notice how the =do= notation allows
+us to chain these operations:
+#+BEGIN_SRC lean
+universe u
+variables {A B C D : Type.{u}} (oa : option A)
+variables (f : A → option B) (g : A → B → option C) 
+          (h : A → B → C → option D)
+
+example : option B :=
+do a ← oa, 
+   b ← f a, 
+   return b
+
+example : option D :=
+do a ← oa,
+   b ← f a,
+   c ← g a b,
+   h a b c
+#+END_SRC
+Think of =f=, =g=, and =h= as being partial functions on their
+respective domains, where a return value of =none= indicates that the
+function is undefined for the given input. Intuitively, the second
+example above returns =h a (f a) (g a (f a))=, assuming =oa= is =some
+a= and all the subterms of that expression are defined. The expression
+=h a (f a) (g a (f a))= does not actually type check; for example, the
+second argument of =h= should be of type =B= rather than =option
+B=. But monadic notation allows us to simulate the computation of a
+possibly undefined term, where the bind operation serves to percolate
+a value of =none= to the output.
+
+** The =list= monad
+
+Our next example of a monad is the =list= monad. In the last section
+we thought of a function =f : A → option B= as a function which, on
+input =A=, possibly returns an element of =B=. Now we will think of a
+function =f : A → list B= as a function which, on input =A=, returns a
+list of possible values for the output. This monad is sometimes also
+called the =nondeterministic= monad, since we can think of =f= as a
+computation which may nondeterministically return any of the elements
+in the list.
+
+It is easy to insert a value =a : A= into =list A=; we define =return
+a= to be just the singleton list =[a]=. Now, given =la : list A= and
+=f : A → list B=, how should we define the bind operation ~la >>= f~?
+Intuitively, =la= represents any of the possible values occuring in
+the list, and for each such element =a=, =f= may return any of the
+elements in =f a=. We can then gather all the possible values of the
+virtual application by applying =f= to each element of =la= and
+merging the results into a single list:
+#+BEGIN_SRC lean
+open list
+
+definition bind {A B : Type} (la : list A) (f : A → list B) : list B :=
+join (map f la)
+#+END_SRC
+Since the example in the previous section used nothing more than
+generic monad operations, we can replay it in the =list= setting:
+#+BEGIN_SRC lean
+universe u
+variables {A B C D : Type.{u}} (la : list A)
+variables (f : A → list B) (g : A → B → list C) 
+          (h : A → B → C → list D)
+
+example : list D :=
+do a ← la,
+   b ← f a,
+   c ← g a b,
+   h a b c
+#+END_SRC
+Now think of the computation as representing the list of all possible
+values of the expression =h a (f a) (g a (f a))=, where the bind
+percolates all possible values of the subexpressions to the final
+output.
+
+Notice that the final output of the expression is a list, to which we
+can then apply any of the usual functions that deal with lists:
+#+BEGIN_SRC lean
+open list
+
+universe u
+variables {A B C D : Type.{u}} (la : list A)
+variables (f : A → list B) (g : A → B → list C) (h : A → B → C → list D)
+
+example : ℕ :=
+length 
+  (do a ← la,
+      b ← f a,
+      c ← g a b,
+      h a b c)
+#+END_SRC
+We can also move =length= inside the =do= expression, but then the
+output lives in =ℕ= instead of a =list=. As a result, we need to use
+=return= to put the result in a monad:
+#+BEGIN_SRC lean
+open list
+
+variables {A B C D : Type.{1}} (la : list A)
+variables (f : A → list B) (g : A → B → list C) 
+          (h : A → B → C → list D)
+
+example : list ℕ :=
+do a ← la, 
+   b ← f a,
+   c ← g a b,
+   return (length (h a b c))
+#+END_SRC
+
+** The state monad
+
+Let us indulge in science fiction for a moment, and suppose we wanted
+to extend Lean's programming language with three global registers,
+=x=, =y=, and =z=, each of which stores a natural number. When
+evaluating an expression =g (f a)= with =f : A → B= and =g : B → C=,
+=f= would start the computation with the registers initialized to =0=,
+but could read and write values during the course of its
+computation. When =g= began its computation on =f a=, the registers
+would be set they way that =g= left them, and =g= could continue to
+read and write values. (To avoid questions as to how we would
+interpret the flow of control in terms like =h (k₁ a) (k₂ a)=, let us
+suppose that we only care about composing unary functions.)
+
+There is a straightfoward way to implement this behavior in a
+functional programming language, namely, by making the state of the
+three registers an explicit argument. First, let us define a data
+structure to hold the three values, and define the initial settings:
+#+BEGIN_SRC lean
+structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
+
+definition init_reg : registers := registers.mk 0 0 0
+#+END_SRC
+Now, instead of defining =f : A → B= that operates on the state of the
+registers implicitly, we would define a function =f₀ : A × registers →
+B × registers= that operates on it explicitly. The function =f₀= would
+take an input =a : A=, paired with the state of the registers at the
+beginning of the computation. It could the do whatever it wanted to
+the state, and return an output =b : B= paired with the new
+state. Similarly, we would replace =g= by a function =g₀ : B ×
+registers → C × registers=. The result of the composite computation
+would be given by =(g₀ (f₀ (a, init_reg))).1=. In other words, we
+would pair the value =a= with the initial setting of the registers,
+apply =f₀= and then =g₀=, and take the first component. If we wanted
+to lay our hands on the state of the registers at the end of the
+computation, we could do that by taking the second component.
+
+The biggest problem with this approach is the annoying overhead. To
+write functions this way, we would have to pair and unpair arguments
+and construct the new state explicitly. A key virtue of the monad
+abstraction is that it manages boilerplate operations in situations
+just like these.
+
+Indeed, the monadic solution is not far away. By currying the input,
+we could take the input of =f₀= equally well to be =A → registers → B
+× registers=. Now think of =f₀= as being a function which takes an
+input in =A= and returns an element of =registers → B ×
+registers=. Moreover, think of this output as representing a
+computation which starts with a certain state, and returns a value of
+=B= and a new state. Lo and behold, /that/ is the relevant monad.
+
+To be precise: for any type =A=, the monad =m A= we are after is
+=registers → A × registers=. We will call this the state monad for
+=registers=. With this notation, the function =f₀= described above has
+type =A → m B=, the function =g₀= has type =B → m C=, and the
+composition of the two on input =a= is ~f a >>= g~. Notice that the
+result is an element of =m C=, which is to say, it is a computation
+which takes any state and returns a value of =C= paired with a new
+state. With =do= notation, we would express this instead as =do b ← f
+a, g b=. If we want to leave the monad and extract a value in =C=, we
+can apply this expression to the initial state =init_reg=, and take
+the first element of the resulting pair.
+
+The last thing to notice is that there is nothing special about
+=registers= here. The same trick would work for any data structure
+that we choose to represent the state of a computation at a given
+point in time. We could describe, for example, registers, a stack, a
+heap, or any combination of these. For every type =S=, Lean's library
+defines the state monad =state S= to be the monad that maps any type
+=A= to the type =S → A × S=. The particular monad described above is
+then simply =state registers=.
+
+Let us consider the =return= and =bind= operations. Given any =a : A=,
+=return a= is given by =λ s, (a, s)=. This represents the
+computation which takes any state =s=, leaves it unchanged, and
+inserts =a= as the return value. The value of =bind= is tricker. Given
+an =sa : state S A= and an =f : A → state S B=, remember that =bind sa
+f= is supposed to "reach into the box," extract an element =a= from
+=sa=, and apply =f= to it inside the monad. Now, the result of =bind
+sa f= is supposed to be an element of =state S B=, which is really a
+function =S → B × S=. In other words, =bind sa f= is supposed to
+encode a function which operates on any state to produce an element of
+=B= tonad a new state. Doing so is straightforward: given any
+state =s=, =sa s= consists of a pair =(a, s₀)=, and applying =f= to
+=a= and then =s₀= yields the required element of =B × S=. Thus the
+definition of =bind sa f= is as follows:
+#+BEGIN_SRC lean_text
+λ s, match (sa s) with (a, s₀) := b a s₀
+#+END_SRC
+
+The library also defines operations =read= and =write= as follows:
+#+BEGIN_SRC lean
+definition read {S : Type} : state S S :=
+λ s, (s, s)
+
+definition write {S : Type} : S → state S unit :=
+λ s₀ s, ((), s₀)
+#+END_SRC
+With the argument =S= implicit, =read= is simply the state computation
+that does not change the current state, but also returns it as a
+value.  The value =write s₀= is the state computation which replaces
+any state =s= by =s₀= and returns =unit=. Notice that it is convenient
+to use =unit= for the output type any operation that does not return a
+value, though it may change the state.
+
+Returning to our example, we can implement the register state monad
+and more focused read and write operations as follows:
+#+BEGIN_SRC lean
+open state
+
+structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
+
+-- BEGIN
+definition init_reg : registers :=
+registers.mk 0 0 0
+
+abbreviation reg_state := state registers
+
+definition read_x : reg_state ℕ :=
+do s ← read, return (registers.x s)
+
+definition read_y : reg_state ℕ :=
+do s ← read, return (registers.y s)
+
+definition read_z : reg_state ℕ :=
+do s ← read, return (registers.z s)
+
+definition write_x (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk n (registers.y s) (registers.z s))
+
+definition write_y (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write(registers.mk (registers.x s) n (registers.z s))
+
+definition write_z (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk (registers.x s) (registers.y s) n)
+-- END
+#+END_SRC
+We can then write a little register program as follows:
+#+BEGIN_SRC lean
+open state
+
+structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
+
+definition init_reg : registers :=
+registers.mk 0 0 0
+
+abbreviation reg_state := state registers
+
+definition read_x : reg_state ℕ :=
+do s ← read, return (registers.x s)
+
+definition read_y : reg_state ℕ :=
+do s ← read, return (registers.y s)
+
+definition read_z : reg_state ℕ :=
+do s ← read, return (registers.z s)
+
+definition write_x (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk n (registers.y s) (registers.z s))
+
+definition write_y (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write(registers.mk (registers.x s) n (registers.z s))
+
+definition write_z (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk (registers.x s) (registers.y s) n)
+
+-- BEGIN
+open nat
+
+definition foo : reg_state ℕ :=
+do write_x 5,
+   write_y 7,
+   x ← read_x,
+   write_z (x + 3),
+   y ← read_y,
+   z ← read_z,
+   write_y (y + z),
+   y ← read_y,
+   return (y + 2)
+-- END
+#+END_SRC
+To see the results of this program, we have to "run" it on the initial
+state:
+#+BEGIN_SRC lean
+open state
+
+structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
+
+definition init_reg : registers :=
+registers.mk 0 0 0
+
+abbreviation reg_state := state registers
+
+definition read_x : reg_state ℕ :=
+do s ← read, return (registers.x s)
+
+definition read_y : reg_state ℕ :=
+do s ← read, return (registers.y s)
+
+definition read_z : reg_state ℕ :=
+do s ← read, return (registers.z s)
+
+definition write_x (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk n (registers.y s) (registers.z s))
+
+definition write_y (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write(registers.mk (registers.x s) n (registers.z s))
+
+definition write_z (n : ℕ) : reg_state unit :=
+do s ← read, 
+   write (registers.mk (registers.x s) (registers.y s) n)
+
+open nat
+
+definition foo : reg_state ℕ :=
+do write_x 5,
+   write_y 7,
+   x ← read_x,
+   write_z (x + 3),
+   y ← read_y,
+   z ← read_z,
+   write_y (y + z),
+   y ← read_y,
+   return (y + 2)
+
+-- BEGIN
+eval foo init_reg
+-- END
+#+END_SRC
+The result is the pair =(15, registers.mk 5 15 8)=, consisting of the
+return value, =y=, paired with the values of the three registers.
+
+** The IO monad
+
+We can finally explain how Lean handles input and output: the constant
+=IO= is axiomatically declared to be a monad with certain supporting
+operations. It is a kind of state monad, but in contrast to the ones
+discussed in the last section, here the state is entirely opaque to
+Lean. You can think of the state as "the real world," or, at least,
+the status of interaction with the user. Lean's axiomatically declared
+constants include the following:
+#+BEGIN_SRC lean
+import system.IO
+
+namespace hide
+-- BEGIN
+constant put_str : string → IO unit
+constant put_nat : nat → IO unit
+constant get_line : IO string
+-- END
+end hide
+#+END_SRC
+The expression =put_str s= changes the =IO= state by writing =s= to
+output; the return type, =unit=, indicates that no meaningful value is
+returned. The expression =put_nat n= does the analogous thing for a
+natural number, =n=. The expression =get_line=, in contrast; however
+you want to think of the change in =IO= state, a =string= value is
+returned inside the monad. Again, thinking of the =IO= monad as
+representing a state is somewhat heuristic, since within the Lean
+language, there is nothing that we can say about it. But when we run a
+Lean program , the interpreter does the right thing whenever it
+encounters the bind and return operations for the monad, as well as
+the constants above. In particular, in the example below, it ensures
+that the argument to =put_nat= is evaluated before the output is sent
+to the user, and that the expressions are printed in the right order.
+#+BEGIN_SRC lean
+import system.IO
+
+-- BEGIN
+vm_eval do put_str "hello " >> put_str "world!" >> put_nat (27 * 39)
+-- END
+#+END_SRC
+
+# TODO: what will get_line do in the tutorial system?
+
+[TODO: somewhere -- probably in a later chapter? -- document the
+format type and operations.]
+
+** Related type classes
+
+In addition to the monad type class, Lean defines all the following
+abstract type classes and notations.
+#+BEGIN_SRC lean
+open monad
+namespace hide
+-- BEGIN
+structure [class] functor (f : Type → Type) : Type :=
+(map : Π {a b: Type}, (a → b) → f a → f b)
+
+definition fmap {F : Type → Type} [functor F] {A B : Type} 
+  (f : A → B) (a : F A) : F B :=
+functor.map f a
+
+infixr ` <$> `:100 := fmap
+
+structure [class] applicative.{u₁ u₂} (f : Type.{u₁} → Type.{u₂})
+  extends functor f : Type.{max u₁+1 u₂} :=
+(pure : Π {A : Type.{u₁}}, A → f A)
+(seq  : Π {A B : Type.{u₁}}, f (A → B) → f A → f B)
+
+definition pure {f : Type → Type} [applicative f] {A : Type} (a : A) : f A :=
+applicative.pure f a
+
+definition seq_app {A B : Type} {f : Type → Type} [applicative f]
+  (g : f (A → B)) (a : f A) : f B :=
+applicative.seq g a
+
+infixr ` <*> `:2 := seq_app
+
+structure [class] alternative (f : Type → Type) extends applicative f :=
+(failure : Π {A : Type}, f A)
+(orelse  : Π {A : Type}, f A → f A → f A)
+
+definition failure {f : Type → Type} [alternative f] {A : Type} : f A :=
+alternative.failure f
+
+definition orelse {f : Type → Type} [alternative f] {A : Type} : f A → f A → f A :=
+alternative.orelse
+
+infixr ` <|> `:2 := orelse
+
+definition guard {f : Type₁ → Type} [alternative f] (p : Prop) [decidable p] : f unit :=
+if p then pure () else failure
+-- END
+end hide
+#+END_SRC
+The =monad= class extends both =functor= and =applicative=, so both of
+these can be seen as even more abstract versions of =monad=. On the
+other hand, not every =monad= is alternative, and in the next chapter
+we will see an important example of one that is. One way to think
+about an alternative monad is to think of it as representing
+computations that can possibly fail, and, moreover, Intuitively, an
+alternative monad can be thought of supporting definitions that say
+"try =a= first, and if that doesn't work, try =b=." A good example is
+the =option= monad, in which we can think of an element =none= as a
+computation that has failed. If =a= and =b= are elements of =option A=
+for some type =A=, we can define =a <|> b= to have the value =a= if
+=a= is of the form =some a₀=, and =b= otherwise. 
