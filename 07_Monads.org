@@ -126,7 +126,7 @@ the same universe.
 
 # TODO: explain universes somewhere? Or say more here?
 
-** The =option= monad
+** The option monad
 
 The =option= constructor provides what is perhaps the simplest example
 of a monad. Recall that an element of =option A= is either of the form
@@ -179,7 +179,7 @@ B=. But monadic notation allows us to simulate the computation of a
 possibly undefined term, where the bind operation serves to percolate
 a value of =none= to the output.
 
-** The =list= monad
+** The list monad
 
 Our next example of a monad is the =list= monad. In the last section
 we thought of a function =f : A → option B= as a function which, on

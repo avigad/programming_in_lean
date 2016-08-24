@@ -7,5 +7,5 @@
 :END:
 
 [Start with exprs, pexprs, names, ... Getting context and target, basic
-tactics. =repeat, first, etc.=]
+tactics, repeat, first, etc.]
 
