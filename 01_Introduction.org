@@ -1,5 +1,5 @@
 #+Title: Programming in Lean
-#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[http://jroesch.github.io/][Jared Roesch]]
 
 * Introduction
 :PROPERTIES:
@@ -240,7 +240,7 @@ meta_definition head_symbol : expr → name
 | a                := `none
 
 -- TODO: add this to tactic?
--- assuming (P : T), create a fresh name H, and add H : P
+-- assuming (P : T), create a fresh name H, and add assert H : T
 meta_definition assert_fact (P : expr) : tactic unit :=
 do n ← mk_fresh_name,
    t ← infer_type P,

@@ -1,5 +1,5 @@
 #+Title: Programming in Lean
-#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[http://jroesch.github.io/][Jared Roesch]]
 
 * Writing Tactics
 :PROPERTIES:

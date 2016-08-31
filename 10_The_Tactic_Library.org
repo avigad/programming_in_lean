@@ -1,5 +1,5 @@
 #+Title: Programming in Lean
-#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]]
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], Jared Roesch
 
 * The Tactic Library
 :PROPERTIES:
