@@ -152,6 +152,9 @@ output.
 # other axiomatically declared elements.
 
 ** Metaprogramming in Lean
+:PROPERTIES:
+  :CUSTOM_ID: Metaprogramming_in_Lean
+:END:
 
 Lean also allows /metaprograms/, which are Lean programs that involve
 objects and constructs that are not part of the axiomatic
@@ -251,20 +254,21 @@ meta_definition destruct_conjunctions : tactic unit :=
 repeat
   (do l ← local_context,
       first $ forl l (λ h,
-      do ht ← infer_type h,
-         if head_symbol ht = ``and then do
-            mk_mapp ``and.left [none, none, some h] >>= assert_fact,
-            mk_mapp ``and.right [none, none, some h] >>= assert_fact,
-            clear h
-         else failed))
+        do ht ← infer_type h >>= whnf,
+           if head_symbol ht = ``and then do
+              mk_mapp ``and.left [none, none, some h] >>= assert_fact,
+              mk_mapp ``and.right [none, none, some h] >>= assert_fact,
+              clear h
+           else failed))
 -- END
 #+END_SRC
-We will explain the details in Chapter ?, but, roughly speaking, the
-code repeats the following action until there is nothing left to do:
-get the list of hypotheses in the local context, find a hypothesis =H=
-whose type is a conjunction, add new hypotheses justified by =and.left
-H= and =and.right H= to the local context, and then delete =H=. We can
-then use =destruct_conjunctions= like any other Lean tactic.
+We will explain the details in Chapter [[file:08_Writing_Tactics.org::#Writing_Tactics][Writing Tactics]], but, roughly
+speaking, the code repeats the following action until there is nothing
+left to do: get the list of hypotheses in the local context, find a
+hypothesis =H= whose type is a conjunction, add new hypotheses
+justified by =and.left H= and =and.right H= to the local context, and
+then delete =H=. We can then use =destruct_conjunctions= like any
+other Lean tactic.
 #+BEGIN_SRC lean
 open tactic monad expr
 
@@ -292,20 +296,20 @@ do n ← mk_fresh_name,
 meta_definition destruct_conjunctions : tactic unit :=
 repeat
   (do l ← local_context,
-    first $ forl l (λ h,
-      do ht ← infer_type h,
-         if head_symbol ht = ``and then do
-            mk_mapp ``and.left [none, none, some h] >>= assert_fact,
-            mk_mapp ``and.right [none, none, some h] >>= assert_fact,
-            clear h
-         else failed))
+      first $ forl l (λ h,
+        do ht ← infer_type h >>= whnf,
+           if head_symbol ht = ``and then do
+              mk_mapp ``and.left [none, none, some h] >>= assert_fact,
+              mk_mapp ``and.right [none, none, some h] >>= assert_fact,
+              clear h
+           else failed))
 
 -- BEGIN
--- TODO: replace this by a begin...end block when they exist
 example (A B C : Prop) (H : (A ∧ B) ∧ (C ∧ A)) : C :=
 by do destruct_conjunctions >> assumption
 -- END
 #+END_SRC
+# TODO: replace this by a begin...end block when they exist
 Note that the reason we can use such code to prove theorems without
 compromising the integrity of the formal system is that Lean's kernel
 always certifies the result. From a foundational point of view, we
