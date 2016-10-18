@@ -106,7 +106,7 @@ prints "hello world":
 #+BEGIN_SRC lean
 import system.IO
 
-definition hello_world : IO unit :=
+def hello_world : IO unit :=
 put_str "hello world\n"
 
 vm_eval hello_world
@@ -116,11 +116,11 @@ The next example prints the first 100 squares:
 import system.IO
 open nat
 
-definition print_squares : ℕ → IO unit
+def print_squares : ℕ → IO unit
 | 0        := return ()
 | (succ n) := print_squares n >>
-              put_str (to_string n ++ "^2 = " ++ 
-                       to_string (n * n) ++ "\n")
+              put_str (nat.to_string n ++ "^2 = " ++ 
+                       nat.to_string (n * n) ++ "\n")
 
 vm_eval print_squares 100
 #+END_SRC
@@ -137,7 +137,7 @@ axiomatic system.
 #+BEGIN_SRC lean
 import system.IO
 
-definition hello_world : IO unit :=
+def hello_world : IO unit :=
 put_str "hello world\n"
 
 -- BEGIN
@@ -172,9 +172,11 @@ they cannot appear as part of ordinary Lean definitions and theorems.
 For example, the following definition computes McCarthy's 91 function,
 without verifying that the computation terminates on all inputs
 (though, in fact, it does):
+# TODO: change definition of m91 when we can write the recursion 
+#       directly
 #+BEGIN_SRC lean
-meta_definition m91 (n : ℕ) : ℕ :=
-if n > 100 then n - 10 else m91 (m91 (n + 11))
+meta def m91 : ℕ → ℕ
+| n := if n > 100 then n - 10 else m91 (m91 (n + 11))
 
 vm_eval m91 10
 vm_eval m91 100
@@ -185,22 +187,24 @@ We can print out the first 120 values of =m91=:
 import system.IO
 open nat
 
-meta_definition m91 (n : ℕ) : ℕ :=
-if n > 100 then n - 10 else m91 (m91 (n + 11))
+meta def m91 : ℕ → ℕ
+| n := if n > 100 then n - 10 else m91 (m91 (n + 11))
 
 -- BEGIN
-meta_definition print_m91 : ℕ → IO unit
+meta def print_m91 : ℕ → IO unit
 | 0        := return ()
 | (succ n) := print_m91 n >>
-              put_str ("m91 " ++ to_string n ++ " = " ++ 
-                       to_string (m91 n) ++ "\n")
+              put_str ("m91 " ++ nat.to_string n ++ " = " ++ 
+                       nat.to_string (m91 n) ++ "\n")
 
 vm_eval print_m91 120
 -- END
 #+END_SRC
 Of course, such uses of recursion are dangerous.
+# TODO: replace with meta def foo : nat := foo + 1
 #+BEGIN_SRC lean
-meta_definition foo : nat := foo + 1
+meta def foo : ℕ → ℕ
+| n := foo n + 1
 
 eval foo
 -- vm_eval foo
@@ -228,12 +232,8 @@ replaces it by hypotheses (with fresh names) for =A= and =B=.
 #+BEGIN_SRC lean
 open tactic monad expr
 
--- TODO: put this in list?
-meta_definition forl {A B : Type} (l : list A) (f : A → B) : list B :=
-map f l
-
 -- TODO: put this in expr
-meta_definition head_symbol : expr → name
+meta def head_symbol : expr → name
 | (const n a)      := n
 | (app e a)        := match (get_app_fn e) with
                       | (const n l) := n
@@ -244,16 +244,16 @@ meta_definition head_symbol : expr → name
 
 -- TODO: add this to tactic?
 -- assuming (P : T), create a fresh name H, and add assert H : T
-meta_definition assert_fact (P : expr) : tactic unit :=
+meta def assert_fact (P : expr) : tactic unit :=
 do n ← mk_fresh_name,
    t ← infer_type P,
    assertv n t P
 
 -- BEGIN
-meta_definition destruct_conjunctions : tactic unit :=
+meta def destruct_conjunctions : tactic unit :=
 repeat
   (do l ← local_context,
-      first $ forl l (λ h,
+      first $ l^.for (λ h,
         do ht ← infer_type h >>= whnf,
            if head_symbol ht = ``and then do
               mk_mapp ``and.left [none, none, some h] >>= assert_fact,
@@ -272,12 +272,8 @@ other Lean tactic.
 #+BEGIN_SRC lean
 open tactic monad expr
 
--- TODO: put this in list?
-meta_definition forl {A B : Type} (l : list A) (f : A → B) : list B :=
-map f l
-
 -- TODO: put this in expr
-meta_definition head_symbol : expr → name
+meta def head_symbol : expr → name
 | (const n a)      := n
 | (app e a)        := match (get_app_fn e) with
                       | (const n l) := n
@@ -288,15 +284,15 @@ meta_definition head_symbol : expr → name
 
 -- TODO: add this to tactic?
 -- assuming (P : T), create a fresh name H, and add H : P
-meta_definition assert_fact (P : expr) : tactic unit :=
+meta def assert_fact (P : expr) : tactic unit :=
 do n ← mk_fresh_name,
    t ← infer_type P,
    assertv n t P
 
-meta_definition destruct_conjunctions : tactic unit :=
+meta def destruct_conjunctions : tactic unit :=
 repeat
   (do l ← local_context,
-      first $ forl l (λ h,
+      first $ l^.for (λ h,
         do ht ← infer_type h >>= whnf,
            if head_symbol ht = ``and then do
               mk_mapp ``and.left [none, none, some h] >>= assert_fact,
@@ -306,10 +302,9 @@ repeat
 
 -- BEGIN
 example (A B C : Prop) (H : (A ∧ B) ∧ (C ∧ A)) : C :=
-by do destruct_conjunctions >> assumption
+begin destruct_conjunctions >> assumption end
 -- END
 #+END_SRC
-# TODO: replace this by a begin...end block when they exist
 Note that the reason we can use such code to prove theorems without
 compromising the integrity of the formal system is that Lean's kernel
 always certifies the result. From a foundational point of view, we
