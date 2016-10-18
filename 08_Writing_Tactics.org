@@ -24,12 +24,12 @@ processes this definition, it elaborates everything outside the =by=
 invocation first (in this case, just the statement of the theorem),
 and then calls on the Lean virtual machine to execute the tactic. When
 doing so, the virtual machine interprets any axiomatically declared
-=meta_constant= as references to internal Lean functions that
+=meta constant= as references to internal Lean functions that
 implement the functionality of the tactic monad.
 
 The tactic monad can be thought of as a combination of a state monad
 (where the internal "state" as accessed and acted on by the
-=meta_constant= primitives) and the option monad. Because it is a
+=meta constant= primitives) and the option monad. Because it is a
 monad, we have the usual =do= notation. So, if =r=, =s=, and =t= are
 tactics, you should think of
 #+BEGIN_SRC lean_text
@@ -208,7 +208,7 @@ open tactic
 variables A B : Prop
 
 -- BEGIN
-meta_definition my_tactic : tactic unit :=
+meta def my_tactic : tactic unit :=
 do H1 ← intro `H1,
    H2 ← intro `H2,
    e ← to_expr `(and.intro %%H1 %%H2),
@@ -315,7 +315,7 @@ namespace foo
 
 theorem bar : true := trivial
 
-meta_definition my_tac : tactic unit :=
+meta def my_tac : tactic unit :=
 mk_const `bar >>= exact
 
 -- example : true := by my_tac -- fails
@@ -339,7 +339,7 @@ namespace foo
 
 theorem bar : true := trivial
 
-meta_definition my_tac : tactic unit :=
+meta def my_tac : tactic unit :=
 mk_const ``bar >>= exact
 
 example : true := by my_tac -- fails
@@ -527,21 +527,23 @@ interface, and see a number of basic tactics implemented in Lean. For
 example, here is the definition of the =assumption= tactic:
 #+BEGIN_SRC lean
 open tactic
+namespace hide
 
 -- BEGIN
-meta_definition find_same_type : expr → list expr → tactic expr
+meta def find_same_type : expr → list expr → tactic expr
 | e []         := failed
 | e (H :: Hs) :=
   do t ← infer_type H,
      (unify e t >> return H) <|> find_same_type e Hs
 
-meta_definition assumption : tactic unit :=
-do { ctx ← local_context,
-     t   ← target,
-     H   ← find_same_type t ctx,
-     exact H }
+meta def assumption : tactic unit :=
+do ctx ← local_context,
+   t   ← target,
+   H   ← find_same_type t ctx,
+   exact H
 <|> fail "assumption tactic failed"
 -- END
+end hide
 #+END_SRC
 The expression =find_same_type t es= tries to find in es an expression
 with type definitionally equal to =t= in the list of expressions =es=,
@@ -562,7 +564,7 @@ and applies the first one that succeeds:
 open tactic
 
 -- BEGIN
-meta_definition first {A : Type} : list (tactic A) → tactic A
+meta def first {A : Type} : list (tactic A) → tactic A
 | []      := fail "first tactic failed, no more alternatives"
 | (t::ts) := t <|> first ts
 -- END
@@ -573,11 +575,11 @@ example from Section [[file:01_Introduction.org::#Metaprogramming_in_Lean][Metap
 open tactic monad expr
 
 -- TODO: put this in list?
-meta_definition forl {A B : Type} (l : list A) (f : A → B) : list B :=
+meta def forl {A B : Type} (l : list A) (f : A → B) : list B :=
 map f l
 
 -- TODO: put this in expr
-meta_definition head_symbol : expr → name
+meta def head_symbol : expr → name
 | (const n a)      := n
 | (app e a)        := match (get_app_fn e) with
                       | (const n l) := n
@@ -588,13 +590,13 @@ meta_definition head_symbol : expr → name
 
 -- TODO: add this to tactic?
 -- assuming (P : T), create a fresh name H, and add assert H : T
-meta_definition assert_fact (P : expr) : tactic unit :=
+meta def assert_fact (P : expr) : tactic unit :=
 do n ← mk_fresh_name,
    t ← infer_type P,
    assertv n t P
 
 -- BEGIN
-meta_definition destruct_conjunctions : tactic unit :=
+meta def destruct_conjunctions : tactic unit :=
 repeat
   (do l ← local_context,
       first $ forl l (λ h,
@@ -626,7 +628,7 @@ we construct the terms =and.left h= and =and.right h= and add them to
 the context with a fresh name. The =clear= tactic then deletes =h=
 itself.
 
-Remember that when writing =meta_definitions= you can carry out
+Remember that when writing =meta defs= you can carry out
 arbitrary recursive calls, without any guarantee of termination. You
 should use this with caution when writing tactics; if there is any
 chance that some unforseen circumstance will result in an infinite
@@ -634,15 +636,18 @@ loop, it is wiser to use a large cutoff to prevent the tactic from
 hanging. Even the =repeat= tactic is implemented as a finite iteration:
 #+BEGIN_SRC lean
 open tactic nat
+namespace hide
 
 -- BEGIN
-meta_definition repeat_at_most : nat → tactic unit → tactic unit
+meta def repeat_at_most : nat → tactic unit → tactic unit
 | 0        t := skip
 | (succ n) t := (do t, repeat_at_most n t) <|> skip
 
-meta_definition repeat : tactic unit → tactic unit :=
+meta def repeat : tactic unit → tactic unit :=
 repeat_at_most 100000
 -- END
+
+end hide
 #+END_SRC
 But 100,000 iterations is still enough to get you into trouble if you
 are not careful.
