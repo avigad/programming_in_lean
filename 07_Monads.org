@@ -141,7 +141,7 @@ way, in general, of producing an element of =A=. But we can simulate
 extraction of such an element as long as we are willing to stay in the
 virtual land of =options=, by defining =bind= as follows:
 #+BEGIN_SRC lean
-definition bind {A B : Type} (oa : option A) (f : A → option B) : 
+def bind {A B : Type} (oa : option A) (f : A → option B) : 
   option B :=
 match oa with
 | (some a) := f a
@@ -201,7 +201,7 @@ merging the results into a single list:
 #+BEGIN_SRC lean
 open list
 
-definition bind {A B : Type} (la : list A) (f : A → list B) : list B :=
+def bind {A B : Type} (la : list A) (f : A → list B) : list B :=
 join (map f la)
 #+END_SRC
 Since the example in the previous section used nothing more than
@@ -277,7 +277,7 @@ structure to hold the three values, and define the initial settings:
 #+BEGIN_SRC lean
 structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
 
-definition init_reg : registers := registers.mk 0 0 0
+def init_reg : registers := registers.mk 0 0 0
 #+END_SRC
 Now, instead of defining =f : A → B= that operates on the state of the
 registers implicitly, we would define a function =f₀ : A × registers →
@@ -341,17 +341,17 @@ encode a function which operates on any state to produce an element of
 =B= tonad a new state. Doing so is straightforward: given any
 state =s=, =sa s= consists of a pair =(a, s₀)=, and applying =f= to
 =a= and then =s₀= yields the required element of =B × S=. Thus the
-definition of =bind sa f= is as follows:
+def of =bind sa f= is as follows:
 #+BEGIN_SRC lean_text
 λ s, match (sa s) with (a, s₀) := b a s₀
 #+END_SRC
 
 The library also defines operations =read= and =write= as follows:
 #+BEGIN_SRC lean
-definition read {S : Type} : state S S :=
+def read {S : Type} : state S S :=
 λ s, (s, s)
 
-definition write {S : Type} : S → state S unit :=
+def write {S : Type} : S → state S unit :=
 λ s₀ s, ((), s₀)
 #+END_SRC
 With the argument =S= implicit, =read= is simply the state computation
@@ -369,29 +369,29 @@ open state
 structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
 
 -- BEGIN
-definition init_reg : registers :=
+def init_reg : registers :=
 registers.mk 0 0 0
 
-abbreviation reg_state := state registers
+@[reducible] def reg_state := state registers
 
-definition read_x : reg_state ℕ :=
+def read_x : reg_state ℕ :=
 do s ← read, return (registers.x s)
 
-definition read_y : reg_state ℕ :=
+def read_y : reg_state ℕ :=
 do s ← read, return (registers.y s)
 
-definition read_z : reg_state ℕ :=
+def read_z : reg_state ℕ :=
 do s ← read, return (registers.z s)
 
-definition write_x (n : ℕ) : reg_state unit :=
+def write_x (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk n (registers.y s) (registers.z s))
 
-definition write_y (n : ℕ) : reg_state unit :=
+def write_y (n : ℕ) : reg_state unit :=
 do s ← read, 
    write(registers.mk (registers.x s) n (registers.z s))
 
-definition write_z (n : ℕ) : reg_state unit :=
+def write_z (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk (registers.x s) (registers.y s) n)
 -- END
@@ -402,36 +402,36 @@ open state
 
 structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
 
-definition init_reg : registers :=
+def init_reg : registers :=
 registers.mk 0 0 0
 
-abbreviation reg_state := state registers
+@[reducible] def reg_state := state registers
 
-definition read_x : reg_state ℕ :=
+def read_x : reg_state ℕ :=
 do s ← read, return (registers.x s)
 
-definition read_y : reg_state ℕ :=
+def read_y : reg_state ℕ :=
 do s ← read, return (registers.y s)
 
-definition read_z : reg_state ℕ :=
+def read_z : reg_state ℕ :=
 do s ← read, return (registers.z s)
 
-definition write_x (n : ℕ) : reg_state unit :=
+def write_x (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk n (registers.y s) (registers.z s))
 
-definition write_y (n : ℕ) : reg_state unit :=
+def write_y (n : ℕ) : reg_state unit :=
 do s ← read, 
    write(registers.mk (registers.x s) n (registers.z s))
 
-definition write_z (n : ℕ) : reg_state unit :=
+def write_z (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk (registers.x s) (registers.y s) n)
 
 -- BEGIN
 open nat
 
-definition foo : reg_state ℕ :=
+def foo : reg_state ℕ :=
 do write_x 5,
    write_y 7,
    x ← read_x,
@@ -450,35 +450,35 @@ open state
 
 structure registers : Type := (x : ℕ) (y : ℕ) (z : ℕ)
 
-definition init_reg : registers :=
+def init_reg : registers :=
 registers.mk 0 0 0
 
-abbreviation reg_state := state registers
+@[reducible] def reg_state := state registers
 
-definition read_x : reg_state ℕ :=
+def read_x : reg_state ℕ :=
 do s ← read, return (registers.x s)
 
-definition read_y : reg_state ℕ :=
+def read_y : reg_state ℕ :=
 do s ← read, return (registers.y s)
 
-definition read_z : reg_state ℕ :=
+def read_z : reg_state ℕ :=
 do s ← read, return (registers.z s)
 
-definition write_x (n : ℕ) : reg_state unit :=
+def write_x (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk n (registers.y s) (registers.z s))
 
-definition write_y (n : ℕ) : reg_state unit :=
+def write_y (n : ℕ) : reg_state unit :=
 do s ← read, 
    write(registers.mk (registers.x s) n (registers.z s))
 
-definition write_z (n : ℕ) : reg_state unit :=
+def write_z (n : ℕ) : reg_state unit :=
 do s ← read, 
    write (registers.mk (registers.x s) (registers.y s) n)
 
 open nat
 
-definition foo : reg_state ℕ :=
+def foo : reg_state ℕ :=
 do write_x 5,
    write_y 7,
    x ← read_x,
@@ -550,43 +550,43 @@ abstract type classes and notations.
 open monad
 namespace hide
 -- BEGIN
-structure [class] functor (f : Type → Type) : Type :=
-(map : Π {a b: Type}, (a → b) → f a → f b)
+universe variables u v
 
-definition fmap {F : Type → Type} [functor F] {A B : Type} 
-  (f : A → B) (a : F A) : F B :=
-functor.map f a
+class functor (F : Type u → Type v) : Type (max u+1 v) :=
+(map : Π {A B : Type u}, (A → B) → F A → F B)
+
+@[inline] def fmap {F : Type u → Type v} [functor F] {A B : Type u} : (A → B) → F A → F B :=
+functor.map
 
 infixr ` <$> `:100 := fmap
 
-structure [class] applicative.{u₁ u₂} (f : Type.{u₁} → Type.{u₂})
-  extends functor f : Type.{max u₁+1 u₂} :=
-(pure : Π {A : Type.{u₁}}, A → f A)
-(seq  : Π {A B : Type.{u₁}}, f (A → B) → f A → f B)
+class applicative (F : Type u → Type v) extends functor F : Type (max u+1 v):=
+(pure : Π {A : Type u}, A → F A)
+(seq  : Π {A B : Type u}, F (A → B) → F A → F B)
 
-definition pure {f : Type → Type} [applicative f] {A : Type} (a : A) : f A :=
-applicative.pure f a
+@[inline] def pure {F : Type u → Type v} [applicative F] {A : Type u} : A → F A :=
+applicative.pure F
 
-definition seq_app {A B : Type} {f : Type → Type} [applicative f]
-  (g : f (A → B)) (a : f A) : f B :=
-applicative.seq g a
+@[inline] def seq_app {A B : Type u} {F : Type u → Type v} [applicative F] : F (A → B) → F A → F B :=
+applicative.seq
 
 infixr ` <*> `:2 := seq_app
 
-structure [class] alternative (f : Type → Type) extends applicative f :=
-(failure : Π {A : Type}, f A)
-(orelse  : Π {A : Type}, f A → f A → f A)
+class alternative (F : Type u → Type v) extends applicative F : Type (max u+1 v) :=
+(failure : Π {A : Type u}, F A)
+(orelse  : Π {A : Type u}, F A → F A → F A)
 
-definition failure {f : Type → Type} [alternative f] {A : Type} : f A :=
-alternative.failure f
+@[inline] def failure {F : Type u → Type v} [alternative F] {A : Type u} : F A :=
+alternative.failure F
 
-definition orelse {f : Type → Type} [alternative f] {A : Type} : f A → f A → f A :=
+@[inline] def orelse {F : Type u → Type v} [alternative F] {A : Type u} : F A → F A → F A :=
 alternative.orelse
 
 infixr ` <|> `:2 := orelse
 
-definition guard {f : Type₁ → Type} [alternative f] (p : Prop) [decidable p] : f unit :=
-if p then pure () else failure
+@[inline] def guard {F : Type → Type v} [alternative F] (P : Prop) [decidable P] : F unit :=
+if P then pure () else failure
+
 -- END
 end hide
 #+END_SRC
