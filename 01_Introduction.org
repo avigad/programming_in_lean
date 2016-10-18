@@ -319,7 +319,7 @@ To summarize, we can use Lean in any of the following ways:
 - as a system for writing metaprograms, that is, programs that extend
   the functionality of Lean itself
 
-Chapters ??-?? explain how to use Lean as a programming language. It
+Chapters [[file:02_Programming_Basics.org::#Programming_Basics][2]] to [[file:07_Monads.org::#Monads][7]] explain how to use Lean as a programming language. It
 will be helpful if you have some familiarity with the syntax and
 meaning of dependent type theory, for example, as presented in
 /Theorem Proving in Lean/ (henceforth /TPL/). But, if not, it is
@@ -328,11 +328,11 @@ proceed. Similarly, if you are familiar with functional programming,
 you will be able to move through the material more quickly, but we
 will try to keep the presentation below self contained.
 
-Chapters ?? and ?? deal with the task of proving things about
+[[file:04_Verifying_Properties_of_Programs.org::#Verifying_Properties_of_Programs][Chapter 4]] in particular deals with the task of proving things about
 programs. Once again, it will be helpful if you are familiar with the
 use of Lean as an interactive theorem prover as described in /TPL/,
 but if not you are encouraged to forge ahead and refer back to /TPL/
 as necessary.
 
-Finall, chapters ?? to ?? deal with metaprogramming aspects of Lean,
-and, in particular, writing tactics and automation.
+Finally, [[file:08_Writing_Tactics.org::#Writing_Tactics][Chapter 8]] and [[file:09_Writing_Automation.org::#Writing_Automation][Chapter 9]] deal with metaprogramming aspects of
+Lean, and, in particular, writing tactics and automation.
