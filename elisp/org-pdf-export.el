@@ -32,9 +32,8 @@
         ("" "hyperref" nil)
         "\\tolerance=1000"))
 
-;; (setq org-latex-listings 'minted)
-(setq org-latex-listings 'listings)
-
+(setq org-latex-listings 'minted)
+;; (setq org-latex-listings 'listings)
 (setq org-export-with-smart-quotes t)
 (add-to-list 'org-export-smart-quotes-alist
 '("en"
@@ -47,11 +46,11 @@
 ;; Header.tex explicitly loads all necessary packages.
 (make-local-variable 'org-latex-default-packages-alist)
 (setf org-latex-default-packages-alist nil)
-(setq org-export-latex-listings 'listings)
-;;(setq org-export-latex-listings 'minted)
-;;(setq org-latex-minted-options
-;;      '(("frame" "lines")
-;;        ("fontsize" "\\scriptsize")))
+;; (setq org-export-latex-listings 'listings)
+(setq org-export-latex-listings 'minted)
+(setq org-latex-minted-options
+      '(("frame" "lines")
+        ("fontsize" "\\scriptsize")))
 (setq-default indent-tabs-mode nil)
 
 (defun lean-filter-latex-link (text backend info)

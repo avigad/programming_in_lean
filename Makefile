@@ -22,25 +22,25 @@ programming_in_lean.org: $(ORGS)
 	cat header/html.org $< > $(TMPDIR)/$<.temp.org
 	(grep "\\\\cite{" $< && cat footer/bib.html.org >> $(TMPDIR)/$<.temp.org) || true
 	cp *.bib $(TMPDIR)
-	$(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-html-export.el --visit $(TMPDIR)/$<.temp.org -f org-html-export-to-html
+	$(CASK_BIN) exec $(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-html-export.el --visit $(TMPDIR)/$<.temp.org -f org-html-export-to-html
 	mv $(TMPDIR)/$<.temp.html $@
 	rm $(TMPDIR)/$<.temp.org
 
 quickref.tex: A1_Quick_Reference.org .cask elisp/org-pdf-export.el header/latex_quickref.org header/latex_quickref.tex
 	make gitinfo
 	cat header/latex_quickref.org $< > $(TMPDIR)/$<.temp.org
-	$(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-pdf-export.el --visit $(TMPDIR)/$<.temp.org -f org-latex-export-to-latex
+	$(CASK_BIN) exec $(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-pdf-export.el --visit $(TMPDIR)/$<.temp.org -f org-latex-export-to-latex
 	mv $(TMPDIR)/$<.temp.tex $@
 	rm $(TMPDIR)/$<.temp.org
 
 programming_in_lean.tex: programming_in_lean.org .cask elisp/org-pdf-export.el header/latex.org header/latex.tex footer/latex.org lean.bib
 	make gitinfo
 	cat header/latex.org $< footer/latex.org > $(TMPDIR)/$<.temp.org
-	$(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-pdf-export.el --visit $(TMPDIR)/$<.temp.org -f org-latex-export-to-latex
+	$(CASK_BIN) exec $(EMACS_BIN) --no-site-file --no-site-lisp -q --batch -l elisp/org-pdf-export.el --visit $(TMPDIR)/$<.temp.org -f org-latex-export-to-latex
 	mv $(TMPDIR)/$<.temp.tex $@
 	rm $(TMPDIR)/$<.temp.org
 
-%.pdf: %.tex
+%.pdf: %.tex pygments-main
 	# # Use latexmk if exists otherwise use xelatex + bibtex
 	# if hash latexmk 2>/dev/null; then \
 	#     latexmk --xelatex --shell-escape $<; \
@@ -65,7 +65,7 @@ clean:
 
 dist-clean:
 	make clean
-	rm -rf .cask watchman
+	rm -rf .cask watchman pygments-main
 
 watch-on:
 	$(WATCHMAN_BIN) watch $(CWD)
@@ -81,6 +81,11 @@ install-cask:
 install-watchman:
 	git clone https://github.com/facebook/watchman.git
 	cd watchman &&./autogen.sh && ./configure --prefix $(CWD)/watchman && make install
+
+pygments-main: install-pygments
+
+install-pygments:
+	if [ ! -d pygments-main ] ; then hg clone https://bitbucket.org/leanprover/pygments-main && cd pygments-main && python setup.py build; fi
 
 gitinfo:
 	git log -1 --date=short \
