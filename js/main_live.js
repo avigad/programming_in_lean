@@ -565,11 +565,7 @@ var myModule = (function() {
             var start_time = new Date().getTime();
             myModule.append_console("-- Initializing Lean...           ");
             setTimeout(function() {
-                if (myModule.useHoTT) {
-                    Module.lean_init(true);
-                } else {
-                    Module.lean_init(false);
-                }
+                Module.lean_init();
                 myModule.append_console("Done");
                 myModule.append_console_nl("(" + elapsed_time_string(start_time) + ")");
             }, 5);
