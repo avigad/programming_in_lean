@@ -701,7 +701,7 @@ if (gup("mem") != "") {
     Module.TOTAL_MEMORY=64 * 1024 * 1024;
 }
 
-// timestamp before loading lean.js
+// timestamp before loading lean3.js
 Module['print'] = function(text) {
     myModule.push_output_buffer(text);
     editor_main.focus();
@@ -728,6 +728,6 @@ if (myModule.useHoTT) {
     myModule.append_console("-- Loading lean.hott.js...             ");
     loadJSFile("//leanprover.github.io/lean.js/lean.hott.js");
 } else {
-    myModule.append_console("-- Loading lean.js...             ");
-    loadJSFile("//leanprover.github.io/lean.js/lean.js");
+    myModule.append_console("-- Loading lean3.js...             ");
+    loadJSFile("//leanprover.github.io/lean.js/lean3.js");
 }
