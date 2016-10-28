@@ -18,12 +18,6 @@ this early stage. Most of the chapters are currently only stubs, but
 comments and feedback on the material that is available will be
 helpful.
 
-Most of the examples here will not run under the current version of
-Lean (which is what is running in the online version). To try them
-out, you will have to build the version of Lean found in the lean3
-branch of the Github repository. Remember that you can run the
-examples from Emacs using C-c C-x.
-
 ** Lean as a Programming Language
 
 This book can be viewed as a companion to /Theorem Proving in Lean/,
