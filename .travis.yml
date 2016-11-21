@@ -46,8 +46,6 @@ before_install:
   - mkdir ~/bin
   - export PATH="/home/travis/.cask/bin:~/bin:$PATH"
   - curl -fsSL https://raw.github.com/cask/cask/master/go | python
-  - cask
-  - tar xvfz header/l3kernel.tar.gz -C ~/
 
 install:
   # Install Lean dependencies
@@ -73,13 +71,13 @@ install:
   - sudo npm -g i cssmin minify
 
 script:
-  - EMACS_BIN=emacs make
+  - make
   # Build completion.js
-  - echo "var completions = [" > js/completion.js
-  - ./lean/bin/lean --server < js/completion_input.in | grep "|" | grep -v "^private\." | sort | uniq | sed -e "s/\([^|]\+\)|\(.\+\)/{name:\"\1\", value:\"\1\", meta:\"\2\"},/" >> js/completion.js
-  - echo "]" >> js/completion.js
+  # - echo "var completions = [" > js/completion.js
+  # - ./lean/bin/lean --server < js/completion_input.in | grep "|" | grep -v "^private\." | sort | uniq | sed -e "s/\([^|]\+\)|\(.\+\)/{name:\"\1\", value:\"\1\", meta:\"\2\"},/" >> js/completion.js
+  # - echo "]" >> js/completion.js
   # Build input-method.js
-  - cask exec emacs --no-site-file --no-site-lisp -q --batch -l ./elisp/org-html-export.el -l ./lean/src/emacs/lean-input.el -f lean-input-export-translations-to-stdout > js/input-method.js
+  # - cask exec emacs --no-site-file --no-site-lisp -q --batch -l ./elisp/org-html-export.el -l ./lean/src/emacs/lean-input.el -f lean-input-export-translations-to-stdout > js/input-method.js
   # Push to gh-pages
   # Leo: I did not add PDF because the PDF generation is not working on Ubuntu 16.04
   - if [[ "${REPO}" == "BLESSED" ]] && [[ "${TRAVIS_PULL_REQUEST}" == "false" ]] ; then
