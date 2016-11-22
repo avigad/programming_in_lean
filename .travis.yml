@@ -44,6 +44,8 @@ env:
    - TEST=TRUE
 
 before_install:
+  - sudo add-apt-repository ppa:jonathonf/texlive-2016 -y
+  - sudo apt-get update -q
   - mkdir ~/bin
   - export PATH="/home/travis/.cask/bin:~/bin:$PATH"
   - curl -fsSL https://raw.github.com/cask/cask/master/go | python
