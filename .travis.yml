@@ -20,6 +20,7 @@ addons:
     - texlive-latex-extra
     - texlive-luatex
     - texlive-fonts-recommended
+    - texlive-generic-recommended
     - latexmk
     - latex-xcolor
     - lmodern
