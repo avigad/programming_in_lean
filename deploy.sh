@@ -17,7 +17,6 @@ fi
 
 # 2. Build
 make
-make build_nav_data
 
 # 3. Deploy
 mkdir deploy
@@ -25,7 +24,7 @@ cd deploy
 rm -rf *
 git init
 cp ../*.html ../programming_in_lean.pdf .
-cp -r ../css ../images ../fonts ../js ../ltxpng .
+cp -r ../css ../images ../fonts ../js .
 for CSS in css/*.css
 do
     ${MINIFY} ${CSS} > ${CSS}.min
@@ -38,7 +37,6 @@ do
 done
 git add -f *.html programming_in_lean.pdf
 git add -f css/*
-git add -f ltxpng/*
 git add -f images/*
 git add -f fonts/*
 git add -f js/*
