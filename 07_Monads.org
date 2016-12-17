@@ -12,7 +12,7 @@ equipped with two special operations, =return= and =bind=. If =A= is
 any type, think of =m A= as being a "virtual =A=," or, as some people
 describe it, "an =A= inside a box." 
 
-For a given monoid =m=, the function =return= has type =Π {A : Type},
+For a given monad =m=, the function =return= has type =Π {A : Type},
 A → m A=. The idea is that for any element =a : A=, =return a=
 produces the virtual version of =a=, or puts =a= inside the box.
 
@@ -193,7 +193,7 @@ in the list.
 It is easy to insert a value =a : A= into =list A=; we define =return
 a= to be just the singleton list =[a]=. Now, given =la : list A= and
 =f : A → list B=, how should we define the bind operation ~la >>= f~?
-Intuitively, =la= represents any of the possible values occuring in
+Intuitively, =la= represents any of the possible values occurring in
 the list, and for each such element =a=, =f= may return any of the
 elements in =f a=. We can then gather all the possible values of the
 virtual application by applying =f= to each element of =la= and
@@ -270,7 +270,7 @@ read and write values. (To avoid questions as to how we would
 interpret the flow of control in terms like =h (k₁ a) (k₂ a)=, let us
 suppose that we only care about composing unary functions.)
 
-There is a straightfoward way to implement this behavior in a
+There is a straightforward way to implement this behavior in a
 functional programming language, namely, by making the state of the
 three registers an explicit argument. First, let us define a data
 structure to hold the three values, and define the initial settings:
@@ -533,7 +533,7 @@ to the user, and that the expressions are printed in the right order.
 import system.IO
 
 -- BEGIN
-vm_eval do put_str "hello " >> put_str "world!" >> put_nat (27 * 39)
+vm_eval put_str "hello " >> put_str "world!" >> put_nat (27 * 39)
 -- END
 #+END_SRC
 
@@ -592,7 +592,7 @@ end hide
 #+END_SRC
 The =monad= class extends both =functor= and =applicative=, so both of
 these can be seen as even more abstract versions of =monad=. On the
-other hand, not every =monad= is alternative, and in the next chapter
+other hand, not every =monad= is =alternative=, and in the next chapter
 we will see an important example of one that is. One way to think
 about an alternative monad is to think of it as representing
 computations that can possibly fail, and, moreover, Intuitively, an
