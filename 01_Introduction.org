@@ -10,7 +10,7 @@
 both an introduction and a reference manual for programming in the
 Lean theorem prover.
 
-We are making this material public now now because currently it is the
+We are making this material public now because currently it is the
 only existing documentation for many of the specifics of the Lean
 programming language and its API, and we are hoping that the
 information will be useful to brave souls experimenting with it at
@@ -52,7 +52,7 @@ the language can be evaluated efficiently by Lean's virtual-machine
 interpreter or translated automatically to C++ and compiled.
 
 Viewed from a computational perspective, the Calculus of Inductive
-Construtions is an instance of a purely functional programming
+Constructions is an instance of a purely functional programming
 language. This means that a program in Lean is simply an expression
 whose value is determined compositionally from the values of the other
 expressions it refers to, independent of any sort of ambient state of
@@ -69,7 +69,7 @@ terminating. So, for example, every "while" loop has to be explicitly
 bounded, though, of course, we can consider the result of iterating an
 arbitrary computation =n= times for any given natural number =n=. We
 will see that Lean provides flexible mechanisms for structural and
-well-founded recursion, allowing us to to define functions in natural
+well-founded recursion, allowing us to define functions in natural
 ways. At the same, the system provides complementary mechanisms for
 proving claims, using inductive principles that capture the structure
 of the function definitions.
@@ -82,7 +82,7 @@ For example...
 
 [Define operations on lists.]
 
-[Prove things, like ~length (reverse l) = reverse l~ or ~reverse
+[Prove things, like ~length (reverse l) = length l~ or ~reverse
 (reverse l) = l~.]
 
 ** Input and Output
@@ -126,7 +126,7 @@ foundation. From the latter's perspective, the type constructor =IO=
 and the functions =put_str= and =get_str= are entirely opaque, objects
 about which that the axiomatic system has nothing to say. The =print
 axioms= command shows that the expression =hello world= depends on the
-contants =IO= and =put_str=, which have been forcibly added to the
+constants =IO= and =put_str=, which have been forcibly added to the
 axiomatic system.
 #+BEGIN_SRC lean
 import system.IO
