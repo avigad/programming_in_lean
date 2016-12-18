@@ -176,7 +176,7 @@ by do eH1 ← intro `H1,
       exact eH2
 -- END
 #+END_SRC
-The double backticks will also be explained below, but the general
+The double-backticks will also be explained below, but the general
 idea is that the third line of the tactic builds an =expr= that
 reflects the =and.intro= declaration in the Lean environment, and
 applies it. We can also finish the proof as follows:
