@@ -20,7 +20,7 @@ helpful.
 
 ** Lean as a Programming Language
 
-This book can be viewed as a companion to /Theorem Proving in Lean/,
+This book can be viewed as a companion to [[https://leanprover.github.io/theorem_proving_in_lean/][Theorem Proving in Lean]],
 which presents Lean as a system for building mathematical libraries
 and stating and proving mathematical theorems.  From that perspective,
 the point of Lean is to implement a formal axiomatic framework in
