@@ -18,14 +18,14 @@ tableaux theorem proving, and, from a proof-theoretic standpoint, can
 be used to demonstrate the completeness of cut-free sequent
 calculi. 
 
-The idea is simple. If =A=, =B=, =C=, and =D= are formulas of
-propositional logic, the sequent =A, B, C ⊢ D= represents the goal of
-proving that =D= follows from =A=, =B= and =C=, and =D=. The fact that
+The idea is simple. If =a=, =b=, =c=, and =d= are formulas of
+propositional logic, the sequent =a, b, c ⊢ d= represents the goal of
+proving that =d= follows from =a=, =b= and =c=, and =d=. The fact that
 they are propositional formulas means that they are built up from
 variables of type =Prop= and the constants =true= and =false= using
 the connectives =∧ ∨ → ↔ ¬=. The proof procedure proceeds as follows:
 
-- Negate the conclusion, so that the goal becomes =A, B, C, ¬ D ⊢
+- Negate the conclusion, so that the goal becomes =a, b, c, ¬ d ⊢
   false=.
 
 - Put all formulas into /negation-normal form/. In other words,
@@ -37,13 +37,13 @@ the connectives =∧ ∨ → ↔ ¬=. The proof procedure proceeds as follows:
   only =∧= and =∨=. Now repeatedly apply all of the following proof
   steps:
 
-  - Reduce a goal of the form =Γ, A ∧ B ⊢ false= to the goal 
-    =Γ, A, B ⊢ false=, where =Γ= is any set of propositional formulas.
+  - Reduce a goal of the form =Γ, a ∧ b ⊢ false= to the goal 
+    =Γ, a, b ⊢ false=, where =Γ= is any set of propositional formulas.
 
-  - Reduce a goal of the form =Γ, A ∨ B ⊢ false= to the pair of
-    goals =Γ, A ⊢ false= and =Γ, B ⊢ false=.
+  - Reduce a goal of the form =Γ, a ∨ b ⊢ false= to the pair of
+    goals =Γ, a ⊢ false= and =Γ, b ⊢ false=.
 
-  - Prove any goal of the form =Γ, A, ¬ A ⊢ false= in the usual way.
+  - Prove any goal of the form =Γ, a, ¬ a ⊢ false= in the usual way.
 
 It is not hard to show that this is complete. Each step preserves
 validity, in the sense that the original goal is provable if and only
@@ -107,9 +107,7 @@ end logical_equivalences
 -- END
 #+END_SRC
 
-One way to implement the reduction to negation-normal form is to use
-equational rewriting. So, for convenience, we gather equational
-versions of the identities we need:
+We can now use Lean's built-in simplifier to do the normalization:
 #+BEGIN_SRC lean
 open expr tactic classical
 
@@ -118,7 +116,7 @@ section logical_equivalences
   variables {a b : Prop}
 
   theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
+  iff.intro classical.by_contradiction not_not_intro.
 
   theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
   iff.intro
@@ -145,412 +143,98 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
+
+  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
 -- BEGIN
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
+meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
+do try (simp_at_using lemmas hyp)
 
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
--- END
-#+END_SRC
-
-Normalizing a formula is then just a matter of applying these as rewrite rules repeatedly:
-#+BEGIN_SRC lean
-open expr tactic list classical
-
-section logical_equivalences
-  local attribute [instance] prop_decidable
-  variables {a b : Prop}
-
-  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
-
-  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
-  iff.intro
-    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
-    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
-
-  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
-  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
-
-  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
-  if ha : a then
-    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
-  else
-    or.inl ha
-
-  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
-  iff.intro not_or_not_of_not_and not_and_of_not_or_not
-
-  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
-  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
-
-  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
-  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
-
-  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
-  iff.intro not_and_not_of_not_or not_or_of_not_and_not
-end logical_equivalences
-
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
--- BEGIN
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-let h_name := local_pp_name hyp in
-do repeat (rewrite_at ``iff_eq h_name),
-   repeat (rewrite_at ``implies_eq h_name),
-   repeat ((rewrite_at ``not_and_eq h_name) <|> (rewrite_at ``not_or_eq h_name)),
-   repeat (rewrite_at ``not_not_eq h_name),
-   repeat (rewrite_at ``not_true_eq h_name),
-   repeat (rewrite_at ``not_false_eq h_name)
--- END
-#+END_SRC
-
-We can try it out:
-#+BEGIN_SRC lean
-open expr tactic classical
-
-section logical_equivalences
-  local attribute [instance] prop_decidable
-  variables {a b : Prop}
-
-  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
-
-  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
-  iff.intro
-    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
-    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
-
-  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
-  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
-
-  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
-  if ha : a then
-    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
-  else
-    or.inl ha
-
-  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
-  iff.intro not_or_not_of_not_and not_and_of_not_or_not
-
-  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
-  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
-
-  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
-  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
-
-  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
-  iff.intro not_and_not_of_not_or not_or_of_not_and_not
-end logical_equivalences
-
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-let h_name := local_pp_name hyp in
-do repeat (rewrite_at ``iff_eq h_name),
-   repeat (rewrite_at ``implies_eq h_name),
-   repeat ((rewrite_at ``not_and_eq h_name) <|> (rewrite_at ``not_or_eq h_name)),
-   repeat (rewrite_at ``not_not_eq h_name),
-   repeat (rewrite_at ``not_true_eq h_name),
-   repeat (rewrite_at ``not_false_eq h_name)
-
--- BEGIN
-example (p q r : Prop) (h₁ : ¬ (p ↔ (q ∧ ¬ r))) (h₂ : ¬ (p → (q → ¬ r))) : true :=
-by do hyp₁ ← get_local `h₁,
-      hyp₂ ← get_local `h₂,
-      normalize_hyp hyp₁,
-      normalize_hyp hyp₂,
-      trace_state,
-      triv
--- END
-#+END_SRC
-The output is as follows:
-#+BEGIN_SRC lean_text
-p q r : Prop,
-h₁ : p ∧ (¬q ∨ r) ∨ (q ∧ ¬r) ∧ ¬p,
-h₂ : p ∧ q ∧ r
-⊢ true
-#+END_SRC
-
-A more efficient way is to use Lean's built-in simplifier to do the work for us. 
-#+BEGIN_SRC lean
-open expr tactic classical
-
-section logical_equivalences
-  local attribute [instance] prop_decidable
-  variables {a b : Prop}
-
-  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
-
-  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
-  iff.intro
-    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
-    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
-
-  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
-  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
-
-  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
-  if ha : a then
-    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
-  else
-    or.inl ha
-
-  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
-  iff.intro not_or_not_of_not_and not_and_of_not_or_not
-
-  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
-  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
-
-  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
-  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
-
-  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
-  iff.intro not_and_not_of_not_or not_or_of_not_and_not
-end logical_equivalences
-
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
--- BEGIN
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
-                            ``not_true_eq, ``not_false_eq],
-   try (simp_at_using l hyp)
--- END
-#+END_SRC
-The first line of the tactic turns the list of names into a list of
-expressions, by applying the =mk_const= tactic to each one, and
-returning the resulting list inside the tactic monad. The line =try
-(simp_at_using l hyp)= applies these simplification rules at the
-hypothesis =hyp=; the =try= combinator ensures that the tactic is
-deemed successful even if no simplifications are necessary. Once
-again, we can test the result:
-#+BEGIN_SRC lean
-open expr tactic classical
-
-section logical_equivalences
-  local attribute [instance] prop_decidable
-  variables {a b : Prop}
-
-  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
-
-  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
-  iff.intro
-    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
-    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
-
-  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
-  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
-
-  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
-  if ha : a then
-    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
-  else
-    or.inl ha
-
-  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
-  iff.intro not_or_not_of_not_and not_and_of_not_or_not
-
-  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
-  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
-
-  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
-  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
-
-  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
-  iff.intro not_and_not_of_not_or not_or_of_not_and_not
-end logical_equivalences
-
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
-                            ``not_true_eq, ``not_false_eq],
-   try (simp_at_using l hyp)
-
--- BEGIN
-example (p q r : Prop) (h₁ : ¬ (p ↔ (q ∧ ¬ r))) (h₂ : ¬ (p → (q → ¬ r))) : true :=
-by do hyp₁ ← get_local `h₁,
-      hyp₂ ← get_local `h₂,
-      normalize_hyp hyp₁,
-      normalize_hyp hyp₂,
-      trace_state,
-      triv
--- END
-#+END_SRC
-The result is the same as before. The following tactic,
-=normalize_hyps=, applies these reductions to each hypothesis in the
-local context.
-#+BEGIN_SRC lean
-open expr tactic classical
-
-section logical_equivalences
-  local attribute [instance] prop_decidable
-  variables {a b : Prop}
-
-  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
-  iff.intro classical.by_contradiction not_not_intro
-
-  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
-  iff.intro
-    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
-    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
-
-  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
-  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
-
-  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
-  if ha : a then
-    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
-  else
-    or.inl ha
-
-  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
-  iff.intro not_or_not_of_not_and not_and_of_not_or_not
-
-  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
-  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
-
-  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
-  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
-
-  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
-  iff.intro not_and_not_of_not_or not_or_of_not_and_not
-end logical_equivalences
-
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
-                            ``not_true_eq, ``not_false_eq],
-   try (simp_at_using l hyp)
-
--- BEGIN
 meta def normalize_hyps : tactic unit :=
-do l ← local_context,
-   monad.for' l normalize_hyp
+do hyps ← local_context,
+   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
+         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   monad.for' hyps (normalize_hyp lemmas)
+-- END
+#+END_SRC
+The tactic =normalize_hyp= just simplifies the given hypothesis with
+the given list of lemmas. The =try= combinator ensures that the tactic
+is deemed successful even if no simplifications are necessary. The
+tactic =normalize_hyps= gathers the local context, turns the list of
+names into a list of expressions by applying the =mk_const= tactic to
+each one, and then calls =normalize_hyp= on each element of the
+context with those lemmas. The =for=' tactic, like the =for= tactic,
+applies the second argument to each element of the first, but it
+returns unit rather than accumulate the results in a list.
 
+# TODO: typesetting for' is problematic
+
+We can test the result:
+#+BEGIN_SRC lean
+open expr tactic classical
+
+section logical_equivalences
+  local attribute [instance] prop_decidable
+  variables {a b : Prop}
+
+  theorem not_not_iff (a : Prop) : ¬¬a ↔ a :=
+  iff.intro classical.by_contradiction not_not_intro.
+
+  theorem implies_iff_not_or (a b : Prop) : (a → b) ↔ (¬ a ∨ b) :=
+  iff.intro
+    (λ h, if ha : a then or.inr (h ha) else or.inl ha)
+    (λ h, or.elim h (λ hna ha, absurd ha hna) (λ hb ha, hb))
+
+  theorem not_and_of_not_or_not (h : ¬ a ∨ ¬ b) : ¬ (a ∧ b) :=
+  assume ⟨ha, hb⟩, or.elim h (assume hna, hna ha) (assume hnb, hnb hb)
+
+  theorem not_or_not_of_not_and (h : ¬ (a ∧ b)) : ¬ a ∨ ¬ b :=
+  if ha : a then
+    or.inr (show ¬ b, from assume hb, h ⟨ha, hb⟩)
+  else
+    or.inl ha
+
+  theorem not_and_iff (a b : Prop) : ¬ (a ∧ b) ↔ ¬a ∨ ¬b :=
+  iff.intro not_or_not_of_not_and not_and_of_not_or_not
+
+  theorem not_or_of_not_and_not (h : ¬ a ∧ ¬ b) : ¬ (a ∨ b) :=
+  assume h₁, or.elim h₁ (assume ha, h^.left ha) (assume hb, h^.right hb)
+
+  theorem not_and_not_of_not_or (h : ¬ (a ∨ b)) : ¬ a ∧ ¬ b :=
+  and.intro (assume ha, h (or.inl ha)) (assume hb, h (or.inr hb))
+
+  theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
+  iff.intro not_and_not_of_not_or not_or_of_not_and_not
+
+  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
+end logical_equivalences
+
+meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
+do try (simp_at_using lemmas hyp)
+
+meta def normalize_hyps : tactic unit :=
+do hyps ← local_context,
+   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
+         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   monad.for' hyps (normalize_hyp lemmas)
+
+-- BEGIN
 example (p q r : Prop) (h₁ : ¬ (p ↔ (q ∧ ¬ r))) (h₂ : ¬ (p → (q → ¬ r))) : true :=
 by do normalize_hyps,
       trace_state,
       triv
 -- END
 #+END_SRC
-# TODO: typesetting for' is problematic
-The =for=' tactic, like the =for= tactic, applies the second
-argument to each element of the first, but it returns unit rather than
-accumulate the results in a list.
+The result is as follows:
+#+BEGIN_SRC lean_text
+p q r : Prop,
+h₁ : p ∧ (r ∨ ¬q) ∨ q ∧ ¬p ∧ ¬r,
+h₂ : p ∧ q ∧ r
+⊢ true
+#+END_SRC
 
-The next three tactics handle the task of splitting conjunctions.
+The next five tactics handle the task of splitting conjunctions.
 #+BEGIN_SRC lean
 open tactic expr
 
@@ -559,28 +243,37 @@ do nh ← get_unused_name `h none,
    p ← infer_type prf,
    assertv nh p prf
 
-meta def split_conj_at (h : expr) : tactic unit :=
-do to_expr `(and.left %%h) >>= add_fact,
-   to_expr `(and.right %%h) >>= add_fact,
-   clear h
+meta def is_conj (e : expr) : tactic bool :=
+do t ← infer_type e,
+   return (is_app_of t `and)
 
-meta def find_and_split_conj : tactic unit :=
+meta def add_conjuncts : expr → tactic unit | e := 
+do e₁ ← mk_app `and.left [e],
+   monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
+   e₂ ← mk_app `and.right [e],
+   monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
+
+meta def split_conjs_at (h : expr) : tactic unit :=
+do monad.cond (is_conj h) 
+     (add_conjuncts h >> clear h)
+     skip
+
+meta def split_conjs : tactic unit :=
 do l ← local_context,
-   first $ l^.for 
-     (λ h, do e ← infer_type h,
-            cond (is_app_of e `and) (split_conj_at h) failed)
+   monad.for' l split_conjs_at
 #+END_SRC
 The tactic =add_fact prf= takes a proof of a proposition =p=, and adds
-=p= the the local context with a fresh name. The tactic
-=get_unused_name `h none= generates a fresh name of the form =h_n=,
-for a numeral =n=. Assuming =h= denotes a hypothesis in the local
-context, the tactic =split_conj_at h= splits the conjunction by adding
-both the left and right consequences to the context, and then clearing
-=h= itself. Finally, the tactic =find_and_split_conj= searches for a
-hypothesis =h : a ∧ b= in the local context and splits it, or fails if
-there is no such hypothesis. We will can therefore split all the
-conjunctions in the local context by applying this tactic repeatedly,
-until it fails.
+=p= the the local context with a fresh name. Here, =get_unused_name `h
+none= generates a fresh name of the form =h_n=, for a numeral =n=.
+The tactic =is_conj= infers the type of a given expression, and
+determines whether or not it is a conjunction. The tactic
+=add_conjuncts e= assumes that the type of =e= is a conjunction and
+adds proofs of the left and right conjuncts to the context,
+recursively splitting them if they are conjuncts as well. The tactic
+=split_conjs_at h= tests whether or not the hypothesis =h= is a
+conjunction, and, if so, adds all its conjuncts and then clears it
+from the context. The last tactic, =split_conjs=, applies this to
+every element of the context.
 
 We need two more small tactics before we can write our propositional
 prover. The first reduces the task of proving a statement =p= from some
@@ -607,7 +300,7 @@ we omit the =return ()=, we will get an error message, because
 =deny_conclusion= is supposed to have type =tactic unit=, but the
 =intro= tactic returns an expression.
 
-The next tactic find a disjunction among the hypotheses, or returns
+The next tactic finds a disjunction among the hypotheses, or returns
 the =option.none= if there aren't any.
 #+BEGIN_SRC lean
 open tactic expr
@@ -659,52 +352,42 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
+
+  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
-         ``not_or_eq, ``not_not_eq, ``not_true_eq, ``not_false_eq],
-   try (simp_at_using l hyp)
+meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
+do try (simp_at_using lemmas hyp)
 
 meta def normalize_hyps : tactic unit :=
-do l ← local_context,
-   monad.for' l normalize_hyp
+do hyps ← local_context,
+   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
+         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   monad.for' hyps (normalize_hyp lemmas)
 
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
    p ← infer_type prf,
    assertv nh p prf
 
-meta def split_conj_at (h : expr) : tactic unit :=
-do to_expr `(and.left %%h) >>= add_fact,
-   to_expr `(and.right %%h) >>= add_fact,
-   clear h
+meta def is_conj (e : expr) : tactic bool :=
+do t ← infer_type e,
+   return (is_app_of t `and)
 
-meta def find_and_split_conj : tactic unit :=
+meta def add_conjuncts : expr → tactic unit | e := 
+do e₁ ← mk_app `and.left [e],
+   monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
+   e₂ ← mk_app `and.right [e],
+   monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
+
+meta def split_conjs_at (h : expr) : tactic unit :=
+do monad.cond (is_conj h) 
+     (add_conjuncts h >> clear h)
+     skip
+
+meta def split_conjs : tactic unit :=
 do l ← local_context,
-   first $ l^.for 
-     (λ h, do e ← infer_type h,
-            cond (is_app_of e `and) (split_conj_at h) failed)
+   monad.for' l split_conjs_at
 
 meta def deny_conclusion : tactic unit :=
 do refine `(classical.by_contradiction _),
@@ -716,7 +399,7 @@ meta def find_disj : tactic (option expr) :=
 do l ← local_context,
    (first $ l^.for
      (λ h, do t ← infer_type h,
-              cond (is_app_of t `or) 
+              cond (is_app_of t `or)
                 (return (option.some h)) failed)) <|>
    return none
 
@@ -724,11 +407,11 @@ do l ← local_context,
 meta def prop_prover_aux : ℕ → tactic unit
 | 0            :=  fail "prop prover max depth reached"
 | (nat.succ n) :=
-  do repeat find_and_split_conj,
+  do split_conjs,
      contradiction <|>
-     do (option.some h) ← find_disj | 
+     do (option.some h) ← find_disj |
           fail "prop_prover failed: unprovable goal",
-        cases h, 
+        cases h,
         prop_prover_aux n,
         prop_prover_aux n
 
@@ -800,52 +483,42 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
+
+  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
-section logical_rewrite_rules
-  theorem not_not_eq (A : Prop) : (¬ ¬ A) = A :=
-  propext (not_not_iff A)
-
-  theorem iff_eq (A B : Prop) : (A ↔ B) = ((A → B) ∧ (B → A)) := rfl
-
-  theorem implies_eq (A B : Prop) : (A → B) = (¬ A ∨ B) :=
-  propext (implies_iff_not_or A B)
-
-  theorem not_and_eq (A B : Prop) : (¬ (A ∧ B)) = (¬ A ∨ ¬ B) :=
-  propext (not_and_iff A B)
-
-  theorem not_or_eq (A B : Prop) : (¬ (A ∨ B)) = (¬ A ∧ ¬ B) :=
-  propext (not_or_iff A B)
-
-  theorem not_true_eq : (¬ true) = false := propext not_true
-
-  theorem not_false_eq : (¬ false) = true := propext not_false_iff
-end logical_rewrite_rules
-
-meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
-         ``not_or_eq, ``not_not_eq, ``not_true_eq, ``not_false_eq],
-   try (simp_at_using l hyp)
+meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
+do try (simp_at_using lemmas hyp)
 
 meta def normalize_hyps : tactic unit :=
-do l ← local_context,
-   monad.for' l normalize_hyp
+do hyps ← local_context,
+   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
+         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   monad.for' hyps (normalize_hyp lemmas)
 
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
    p ← infer_type prf,
    assertv nh p prf
 
-meta def split_conj_at (h : expr) : tactic unit :=
-do to_expr `(and.left %%h) >>= add_fact,
-   to_expr `(and.right %%h) >>= add_fact,
-   clear h
+meta def is_conj (e : expr) : tactic bool :=
+do t ← infer_type e,
+   return (is_app_of t `and)
 
-meta def find_and_split_conj : tactic unit :=
+meta def add_conjuncts : expr → tactic unit | e := 
+do e₁ ← mk_app `and.left [e],
+   monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
+   e₂ ← mk_app `and.right [e],
+   monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
+
+meta def split_conjs_at (h : expr) : tactic unit :=
+do monad.cond (is_conj h) 
+     (add_conjuncts h >> clear h)
+     skip
+
+meta def split_conjs : tactic unit :=
 do l ← local_context,
-   first $ l^.for 
-     (λ h, do e ← infer_type h,
-            cond (is_app_of e `and) (split_conj_at h) failed)
+   monad.for' l split_conjs_at
 
 meta def deny_conclusion : tactic unit :=
 do refine `(classical.by_contradiction _),
@@ -857,18 +530,18 @@ meta def find_disj : tactic (option expr) :=
 do l ← local_context,
    (first $ l^.for
      (λ h, do t ← infer_type h,
-              cond (is_app_of t `or) 
+              cond (is_app_of t `or)
                 (return (option.some h)) failed)) <|>
    return none
 
 meta def prop_prover_aux : ℕ → tactic unit
 | 0            :=  fail "prop prover max depth reached"
 | (nat.succ n) :=
-  do repeat find_and_split_conj,
+  do split_conjs,
      contradiction <|>
-     do (option.some h) ← find_disj | 
+     do (option.some h) ← find_disj |
           fail "prop_prover failed: unprovable goal",
-        cases h, 
+        cases h,
         prop_prover_aux n,
         prop_prover_aux n
 
@@ -879,32 +552,32 @@ do deny_conclusion,
 
 -- BEGIN
 section
-  variables A B C D : Prop
+  variables a b c d : Prop
 
-  example (h₁ : A ∧ B) (h₂ : B ∧ ¬ C) : A ∨ C :=
+  example (h₁ : a ∧ b) (h₂ : b ∧ ¬ c) : a ∨ c :=
   by prop_prover
 
-  example (h₁ : A ∧ B) (h₂ : B ∧ ¬ C) : A ∧ ¬ C :=
+  example (h₁ : a ∧ b) (h₂ : b ∧ ¬ c) : a ∧ ¬ c :=
   by prop_prover
 
   -- not valid
-  -- example (h₁ : A ∧ B) (h₂ : B ∧ ¬ C) : A ∧ C :=
+  -- example (h₁ : a ∧ b) (h₂ : b ∧ ¬ c) : a ∧ c :=
   -- by prop_prover
 
-  example : ((A → B) → A) → A :=
+  example : ((a → b) → a) → a :=
   by prop_prover
 
-  example : (A → B) ∧ (B → C) → A → C :=
+  example : (a → b) ∧ (b → c) → a → c :=
   by prop_prover
 
-  example (X : Type) (x y z w : X) : 
+  example (α : Type) (x y z w : α) :
     x = y ∧ (x = y → z = w) → z = w :=
   by prop_prover
 
-  example : ¬ (A ↔ ¬ A) :=
+  example : ¬ (a ↔ ¬ a) :=
   by prop_prover
 
-  -- example : A ∧ (A → B) → (¬ C → ¬ C) → C :=
+  -- example : a ∧ (a → a) → (¬ a → ¬ a) → a :=
   -- by prop_prover
 end
 -- END
