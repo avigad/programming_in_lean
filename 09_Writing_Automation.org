@@ -576,9 +576,6 @@ section
 
   example : ¬ (a ↔ ¬ a) :=
   by prop_prover
-
-  -- example : a ∧ (a → a) → (¬ a → ¬ a) → a :=
-  -- by prop_prover
 end
 -- END
 #+END_SRC
