@@ -385,7 +385,7 @@ end logical_rewrite_rules
 
 -- BEGIN
 meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapM mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
+do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
                             ``not_true_eq, ``not_false_eq],
    try (simp_at_using l hyp)
 -- END
@@ -455,7 +455,7 @@ section logical_rewrite_rules
 end logical_rewrite_rules
 
 meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapM mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
+do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
                             ``not_true_eq, ``not_false_eq],
    try (simp_at_using l hyp)
 
@@ -530,14 +530,14 @@ section logical_rewrite_rules
 end logical_rewrite_rules
 
 meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapM mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
+do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, ``not_or_eq, ``not_not_eq,
                             ``not_true_eq, ``not_false_eq],
    try (simp_at_using l hyp)
 
 -- BEGIN
 meta def normalize_hyps : tactic unit :=
 do l ← local_context,
-   monad.forM' l normalize_hyp
+   monad.for' l normalize_hyp
 
 example (p q r : Prop) (h₁ : ¬ (p ↔ (q ∧ ¬ r))) (h₂ : ¬ (p → (q → ¬ r))) : true :=
 by do normalize_hyps,
@@ -545,8 +545,8 @@ by do normalize_hyps,
       triv
 -- END
 #+END_SRC
-# TODO: typesetting forM' is problematic
-The =forM=' tactic, like the =forM= tactic, applies the second
+# TODO: typesetting for' is problematic
+The =for=' tactic, like the =for= tactic, applies the second
 argument to each element of the first, but it returns unit rather than
 accumulate the results in a list.
 
@@ -682,13 +682,13 @@ section logical_rewrite_rules
 end logical_rewrite_rules
 
 meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapM mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
+do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
          ``not_or_eq, ``not_not_eq, ``not_true_eq, ``not_false_eq],
    try (simp_at_using l hyp)
 
 meta def normalize_hyps : tactic unit :=
 do l ← local_context,
-   monad.forM' l normalize_hyp
+   monad.for' l normalize_hyp
 
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
@@ -823,13 +823,13 @@ section logical_rewrite_rules
 end logical_rewrite_rules
 
 meta def normalize_hyp (hyp : expr) : tactic unit :=
-do l ← monad.mapM mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
+do l ← monad.mapm mk_const [``iff_eq, ``implies_eq, ``not_and_eq, 
          ``not_or_eq, ``not_not_eq, ``not_true_eq, ``not_false_eq],
    try (simp_at_using l hyp)
 
 meta def normalize_hyps : tactic unit :=
 do l ← local_context,
-   monad.forM' l normalize_hyp
+   monad.for' l normalize_hyp
 
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,

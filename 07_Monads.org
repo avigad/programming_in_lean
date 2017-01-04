@@ -141,12 +141,18 @@ way, in general, of producing an element of =A=. But we can simulate
 extraction of such an element as long as we are willing to stay in the
 virtual land of =options=, by defining =bind= as follows:
 #+BEGIN_SRC lean
+namespace hide
+
+-- BEGIN
 def bind {A B : Type} (oa : option A) (f : A → option B) : 
   option B :=
 match oa with
 | (some a) := f a
 | none     := none
 end
+-- END
+
+end hide
 #+END_SRC
 If the element =oa= is =some a=, we can simply apply =f= to =a=, and
 otherwise we simply return =none=. Notice how the =do= notation allows
@@ -200,9 +206,14 @@ virtual application by applying =f= to each element of =la= and
 merging the results into a single list:
 #+BEGIN_SRC lean
 open list
+namespace hide
 
+-- BEGIN
 def bind {A B : Type} (la : list A) (f : A → list B) : list B :=
 join (map f la)
+-- END
+
+end hide
 #+END_SRC
 Since the example in the previous section used nothing more than
 generic monad operations, we can replay it in the =list= setting:
@@ -499,29 +510,29 @@ return value, =y=, paired with the values of the three registers.
 ** The IO monad
 
 We can finally explain how Lean handles input and output: the constant
-=IO= is axiomatically declared to be a monad with certain supporting
+=io= is axiomatically declared to be a monad with certain supporting
 operations. It is a kind of state monad, but in contrast to the ones
 discussed in the last section, here the state is entirely opaque to
 Lean. You can think of the state as "the real world," or, at least,
 the status of interaction with the user. Lean's axiomatically declared
 constants include the following:
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 
 namespace hide
 -- BEGIN
-constant put_str : string → IO unit
-constant put_nat : nat → IO unit
-constant get_line : IO string
+constant put_str : string → io unit
+constant put_nat : nat → io unit
+constant get_line : io string
 -- END
 end hide
 #+END_SRC
-The expression =put_str s= changes the =IO= state by writing =s= to
+The expression =put_str s= changes the =io= state by writing =s= to
 output; the return type, =unit=, indicates that no meaningful value is
 returned. The expression =put_nat n= does the analogous thing for a
 natural number, =n=. The expression =get_line=, in contrast; however
-you want to think of the change in =IO= state, a =string= value is
-returned inside the monad. Again, thinking of the =IO= monad as
+you want to think of the change in =io= state, a =string= value is
+returned inside the monad. Again, thinking of the =io= monad as
 representing a state is somewhat heuristic, since within the Lean
 language, there is nothing that we can say about it. But when we run a
 Lean program , the interpreter does the right thing whenever it
@@ -530,7 +541,7 @@ the constants above. In particular, in the example below, it ensures
 that the argument to =put_nat= is evaluated before the output is sent
 to the user, and that the expressions are printed in the right order.
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 
 -- BEGIN
 vm_eval put_str "hello " >> put_str "world!" >> put_nat (27 * 39)

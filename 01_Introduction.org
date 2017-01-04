@@ -98,19 +98,19 @@ by Lean's virtual machine or when they are translated to C++, they
 have the expected behavior. Here, for example, is a program that
 prints "hello world":
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 
-def hello_world : IO unit :=
+def hello_world : io unit :=
 put_str "hello world\n"
 
 vm_eval hello_world
 #+END_SRC
 The next example prints the first 100 squares:
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 open nat
 
-def print_squares : ℕ → IO unit
+def print_squares : ℕ → io unit
 | 0        := return ()
 | (succ n) := print_squares n >>
               put_str (nat.to_string n ++ "^2 = " ++ 
@@ -119,26 +119,26 @@ def print_squares : ℕ → IO unit
 vm_eval print_squares 100
 #+END_SRC
 
-We will explain the data type =IO unit= in Chapter [[file:07_Monads::#Monads][Monads]]. Although
+We will explain the data type =io unit= in Chapter [[file:07_Monads::#Monads][Monads]]. Although
 this program has a real world side effect of sending output to the
 screen when run, that effect is invisible to the formal
-foundation. From the latter's perspective, the type constructor =IO=
+foundation. From the latter's perspective, the type constructor =io=
 and the functions =put_str= and =get_str= are entirely opaque, objects
 about which that the axiomatic system has nothing to say. The =print
 axioms= command shows that the expression =hello world= depends on the
-constants =IO= and =put_str=, which have been forcibly added to the
+constants =io= and =put_str=, which have been forcibly added to the
 axiomatic system.
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 
-def hello_world : IO unit :=
+def hello_world : io unit :=
 put_str "hello world\n"
 
 -- BEGIN
 print axioms hello_world
 -- END
 #+END_SRC
-In this way, we can prove properties of programs involving =IO= that
+In this way, we can prove properties of programs involving =io= that
 do not depend in any way on the particular results of the input and
 output.
 
@@ -158,10 +158,10 @@ foundation. In particular:
 - Metaprograms can access /metaconstants/, that is, primitive
   functions and objects that are implemented internally in Lean and
   are not meant to be trusted by the foundational framework.
-Such definitions can be introduced using the keyword =metadefinition=
-instead of =definition= and are marked for special treatment. In
-particular, because they are not part of the axiomatic foundation,
-they cannot appear as part of ordinary Lean definitions and theorems.
+Such definitions can be introduced using the keywords =meta def=
+instead of =def= and are marked for special treatment. In particular,
+because they are not part of the axiomatic foundation, they cannot
+appear as part of ordinary Lean definitions and theorems.
 
 For example, the following definition computes McCarthy's 91 function,
 without verifying that the computation terminates on all inputs
@@ -178,14 +178,14 @@ vm_eval m91 1000
 #+END_SRC
 We can print out the first 120 values of =m91=:
 #+BEGIN_SRC lean
-import system.IO
+import system.io
 open nat
 
 meta def m91 : ℕ → ℕ
 | n := if n > 100 then n - 10 else m91 (m91 (n + 11))
 
 -- BEGIN
-meta def print_m91 : ℕ → IO unit
+meta def print_m91 : ℕ → io unit
 | 0        := return ()
 | (succ n) := print_m91 n >>
               put_str ("m91 " ++ nat.to_string n ++ " = " ++ 
@@ -201,7 +201,7 @@ meta def foo : ℕ → ℕ
 | n := foo n + 1
 
 eval foo
--- vm_eval foo
+-- vm_eval foo 0
 #+END_SRC
 Evaluating =foo= using the kernel evaluator shows that the
 implementation is a bit of a hack; the term in the definition includes
