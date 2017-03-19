@@ -295,7 +295,7 @@ repeat
            else failed))
 
 -- BEGIN
-example (A B C : Prop) (H : (A ∧ B) ∧ (C ∧ A)) : C :=
+example (a b c : Prop) (H : (a ∧ b) ∧ (c ∧ a)) : c :=
 begin destruct_conjunctions >> assumption end
 -- END
 #+END_SRC
