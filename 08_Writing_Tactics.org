@@ -679,7 +679,7 @@ section
   by do goal ← target,
         match expr.is_eq goal with
         | (some (e₁, e₂)) := do trace e₁,
-                                whnf_core transparency.none e₁ >>= trace,
+                                whnf e₁ transparency.none >>= trace,
                                 reflexivity
         | none            := failed
         end
@@ -691,7 +691,7 @@ section
   by do goal ← target,
         match expr.is_eq goal with
         | (some (e₁, e₂)) := do trace e₁,
-                                whnf_core transparency.none e₁ >>= trace,
+                                whnf e₁ transparency.none >>= trace,
                                 reflexivity
         | none            := failed
         end
@@ -700,7 +700,7 @@ section
   by do goal ← target,
         match expr.is_eq goal with
         | (some (e₁, e₂)) := do trace e₁,
-                                whnf_core transparency.reducible e₁ >>= trace,
+                                whnf e₁ transparency.reducible >>= trace,
                                 reflexivity
         | none            := failed
         end

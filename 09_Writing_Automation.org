@@ -143,18 +143,17 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
-
-  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
 -- BEGIN
 meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-do try (simp_at_using lemmas hyp)
+do try (simp_at hyp lemmas)
 
 meta def normalize_hyps : tactic unit :=
 do hyps ← local_context,
-   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
-         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
+         ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+         ``not_true_iff, ``not_false_iff],
    monad.for' hyps (normalize_hyp lemmas)
 -- END
 #+END_SRC
@@ -206,17 +205,16 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
-
-  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
 meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-do try (simp_at_using lemmas hyp)
+do try (simp_at hyp lemmas)
 
 meta def normalize_hyps : tactic unit :=
 do hyps ← local_context,
-   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
-         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
+         ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+         ``not_true_iff, ``not_false_iff],
    monad.for' hyps (normalize_hyp lemmas)
 
 -- BEGIN
@@ -352,17 +350,16 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
-
-  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
 meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-do try (simp_at_using lemmas hyp)
+do try (simp_at hyp lemmas)
 
 meta def normalize_hyps : tactic unit :=
 do hyps ← local_context,
-   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
-         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
+         ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+         ``not_true_iff, ``not_false_iff],
    monad.for' hyps (normalize_hyp lemmas)
 
 meta def add_fact (prf : expr) : tactic unit :=
@@ -483,17 +480,16 @@ section logical_equivalences
 
   theorem not_or_iff (a b : Prop) : ¬ (a ∨ b) ↔ ¬ a ∧ ¬ b :=
   iff.intro not_and_not_of_not_or not_or_of_not_and_not
-
-  theorem iff_eq (a b : Prop) : (a ↔ b) = ((a → b) ∧ (b → a)) := rfl
 end logical_equivalences
 
 meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-do try (simp_at_using lemmas hyp)
+do try (simp_at hyp lemmas)
 
 meta def normalize_hyps : tactic unit :=
 do hyps ← local_context,
-   lemmas ← monad.mapm mk_const [``iff_eq, ``implies_iff_not_or, ``not_and_iff,
-         ``not_or_iff, ``not_not_iff, ``not_true_iff, ``not_false_iff],
+   lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
+         ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+         ``not_true_iff, ``not_false_iff],
    monad.for' hyps (normalize_hyp lemmas)
 
 meta def add_fact (prf : expr) : tactic unit :=

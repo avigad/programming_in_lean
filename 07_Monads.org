@@ -239,8 +239,7 @@ can then apply any of the usual functions that deal with lists:
 #+BEGIN_SRC lean
 open list
 
-universe u
-variables {A B C D : Type.{u}} (la : list A)
+variables {A B C D : Type} (la : list A)
 variables (f : A → list B) (g : A → B → list C) (h : A → B → C → list D)
 
 example : ℕ :=
@@ -256,7 +255,7 @@ output lives in =ℕ= instead of a =list=. As a result, we need to use
 #+BEGIN_SRC lean
 open list
 
-variables {A B C D : Type.{1}} (la : list A)
+variables {A B C D : Type} (la : list A)
 variables (f : A → list B) (g : A → B → list C) 
           (h : A → B → C → list D)
 
