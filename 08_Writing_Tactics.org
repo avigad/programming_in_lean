@@ -13,9 +13,9 @@ keyword within a Lean expression. Suppose we write the following:
 #+BEGIN_SRC lean_text
 open tactic
 
-variables A B : Prop
+variables a b : Prop
 
-example : A → B → A ∧ B :=
+example : a → b → a ∧ b :=
 by _
 #+END_SRC 
 Lean expects something of type =tactic unit= to fill the underscore,
@@ -53,16 +53,20 @@ value; otherwise, undo any changes to the state that =s= may have
 produced, and do =t= instead." This allows us to try =s= and, if it
 fails, go on to try =t= as though the first attempt never happened.
 
-When the tactic expression after a =by= is invoked, the tactic
-wakes up and says "Whoa! I'm in a monad!" At that point, it can start
-to look around and assess its current state. The goal of this section
-is to give you a first look at of some of the things it can do
-there. Don't worry if some of the expressions seem mysterious; they
-will be explained in the sections that follow.
+When the tactic expression after a =by= is invoked, the tactic wakes
+up and says "Whoa! I'm in a monad!" This is just a colorful way of
+saying that the virtual machine expects a function that acts on the
+tactic state in a certain way, and interprets primitive operations on
+the tactic state in terms of functions that are implemented internal
+to Lean. At any rate, when it wakes up, it can start to look around
+and assess its current state. The goal of this section is to give you
+a first look at of some of the things it can do there. Don't worry if
+some of the expressions seem mysterious; they will be explained in the
+sections that follow.
 
 One thing the tactic can do is print a message to the outside world:
 #+BEGIN_SRC lean_text
-example : A → B → A ∧ B :=
+example : a → b → a ∧ b :=
 by do trace "Hi, Mom!"
 #+END_SRC
 When the file is executed, Lean issues an error message to the effect
@@ -74,7 +78,7 @@ output, and we will see that this includes a number of useful types.
 
 Another thing we can do is trace the current tactic state:
 #+BEGIN_SRC lean_text
-example : A → B → A ∧ B :=
+example : a → b → a ∧ b :=
 by do trace "Hi, Mom!",
       trace_state
 #+END_SRC
@@ -83,8 +87,8 @@ tactic state, each with a local context that includes the local
 variables and hypotheses. In this case there is only one:
 #+BEGIN_SRC lean_text
 Hi, Mom!
-A B : Prop
-⊢ A → B → A ∧ B
+a b : Prop
+⊢ a → b → a ∧ b
 #+END_SRC
 This points to an important fact: the internal, and somewhat
 mysterious, tactic state includes at least a list of goals. In fact,
@@ -95,14 +99,14 @@ declarations, and so on. In most cases, however, the list of goals is
 most directly relevant to the task at hand.
 
 Let us dispense with the trace messages now, and start to prove the
-theorem by introducting the first two hypotheses.
+theorem by introducing the first two hypotheses.
 #+BEGIN_SRC lean_text
-example : A → B → A ∧ B :=
-by do eH1 ← intro `H1,
-      eH2 ← intro `H2,
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
       skip
 #+END_SRC
-The backticks indicate that =H1= and =H2= are /names/; we will discuss
+The backticks indicate that =h1= and =h2= are /names/; we will discuss
 these below. The tactic =skip= is a do-nothing tactic, simply included
 to ensure that the resulting expression has type =tactic unit=.
 
@@ -114,33 +118,33 @@ via meta-programming glue, the =expr= type allows us to manipulate
 Lean expressions in Lean itself. In particular, we can ask the tactic
 to print the current goal:
 #+BEGIN_SRC lean_text
-example : A → B → A ∧ B :=
-by do eH1 ← intro `H1,
-      eH2 ← intro `H2,
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
       target >>= trace
 #+END_SRC
-In this case, the output is =A ∧ B=, as we would expect. We can also
+In this case, the output is =a ∧ b=, as we would expect. We can also
 ask the tactic to print the elements of the local context.
 #+BEGIN_SRC lean_text 
-example : A → B → A ∧ B :=
-by do eH1 ← intro `H1,
-      eH2 ← intro `H2,
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
       local_context >>= trace
 #+END_SRC
-This yields the list =[A, B, H1, H2]=. We already happen to have
-representations of =H1= and =H2=, because they were returned by the
+This yields the list =[a, b, h1, h2]=. We already happen to have
+representations of =h1= and =h2=, because they were returned by the
 =intro= tactic. But we can extract the other expressions in the local
 context given their names:
 #+BEGIN_SRC lean_text 
-example : A → B → A ∧ B :=
-by do intro `H1,
-      intro `H2,
-      eA ← get_local `A,
-      eB ← get_local `B,
-      trace (to_string eA ++ ", " ++ to_string eB),
+example : a → b → a ∧ b :=
+by do intro `h1,
+      intro `h2,
+      ea ← get_local `a,
+      eb ← get_local `b,
+      trace (to_string ea ++ ", " ++ to_string eb),
       skip
 #+END_SRC
-Notice that =eA= and =eB= are different from =A= and =B=; they have
+Notice that =ea= and =eb= are different from =a= and =b=; they have
 type =expr= rather than =Prop=. They are the internal representations
 of the latter expressions. At present, there is not much for us to do
 with these expressions other than print them out, so we will drop them
@@ -151,12 +155,12 @@ Lean's standard tactics. For example, this will work:
 #+BEGIN_SRC lean
 open tactic
 
-variables A B : Prop
+variables a b : Prop
 
 -- BEGIN
-example : A → B → A ∧ B :=
-by do intro `H1,
-      intro `H2,
+example : a → b → a ∧ b :=
+by do intro `h1,
+      intro `h2,
       split,
       repeat assumption
 -- END
@@ -165,31 +169,46 @@ We can also do it in a more hands-on way:
 #+BEGIN_SRC lean
 open tactic
 
-variables A B : Prop
+variables a b : Prop
 
 -- BEGIN
-example : A → B → A ∧ B :=
-by do eH1 ← intro `H1,
-      eH2 ← intro `H2,
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
       mk_const ``and.intro >>= apply,
-      exact eH1,
-      exact eH2
+      exact eh1,
+      exact eh2
 -- END
 #+END_SRC
 The double-backticks will also be explained below, but the general
 idea is that the third line of the tactic builds an =expr= that
 reflects the =and.intro= declaration in the Lean environment, and
-applies it. We can also finish the proof as follows:
+applies it. The =applyc= tactic combines these two steps:
 #+BEGIN_SRC lean
 open tactic
 
-variables A B : Prop
+variables a b : Prop
 
 -- BEGIN
-example : A → B → A ∧ B :=
-by do eH1 ← intro `H1,
-      eH2 ← intro `H2,
-      e ← to_expr `(and.intro H1 H2),
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
+      applyc ``and.intro,
+      exact eh1,
+      exact eh2
+-- END
+#+END_SRC
+We can also finish the proof as follows:
+#+BEGIN_SRC lean
+open tactic
+
+variables a b : Prop
+
+-- BEGIN
+example : a → b → a ∧ b :=
+by do eh1 ← intro `h1,
+      eh2 ← intro `h2,
+      e ← to_expr `(and.intro h1 h2),
       exact e
 -- END
 #+END_SRC
@@ -197,7 +216,7 @@ Here, the construct =`(...)= is used to build a /pre-expression/, the
 tactic =to_expr= elaborates it and converts it to an expression, and
 the =exact= tactic applies it. In the next section, we will see even
 more variations on constructions like these, including tactics that
-would enable us to construct the expression =and.intro H1 H2= more
+would enable us to construct the expression =and.intro h1 h2= more
 explicitly.
 
 The =do= block in this example has type =tactic unit=, and can be
@@ -205,16 +224,16 @@ broken out as an independent tactic.
 #+BEGIN_SRC lean
 open tactic
 
-variables A B : Prop
+variables a b : Prop
 
 -- BEGIN
 meta def my_tactic : tactic unit :=
-do H1 ← intro `H1,
-   H2 ← intro `H2,
-   e ← to_expr `(and.intro %%H1 %%H2),
+do h1 ← intro `h1,
+   h2 ← intro `h2,
+   e ← to_expr ``(and.intro %%h1 %%h2),
    exact e
 
-example : A → B → A ∧ B :=
+example : a → b → a ∧ b :=
 by my_tactic
 -- END
 #+END_SRC
@@ -227,59 +246,58 @@ the same: we construct an expression of type =tactic unit=, and ask
 the virtual machine to execute it at elaboration time to solve the
 goal at hand.
 
-
 ** Names and Expressions
 
 Suppose we write an ordinary tactic proof in Lean:
 #+BEGIN_SRC lean_text
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 begin
   split,
-  exact and.right H,
-  exact and.left H
+  exact and.right h,
+  exact and.left h
 end
 #+END_SRC
-This way of writing the tactic proof suggests that the =H= in the
-tactic block refers to the expression =H : A ∧ B= in the list of
-hypotheses. But this is an illusion; what =H= /really/ refers to
-is the first hypothesis /named/ =H= that is in the local context of
+This way of writing the tactic proof suggests that the =h= in the
+tactic block refers to the expression =h : a ∧ b= in the list of
+hypotheses. But this is an illusion; what =h= /really/ refers to
+is the first hypothesis /named/ =h= that is in the local context of
 the goal in the state when the tactic is executed. This is made clear,
 for example, by the fact that earlier lines in the proof can change
 the name of the hypothesis:
 #+BEGIN_SRC lean_text
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 begin
-  revert H,
-  intro H',
+  revert h,
+  intro h',
   split,
-  exact and.right H',
-  exact and.left H'
+  exact and.right h',
+  exact and.left h'
 end
 #+END_SRC
-Now writing =exact and.right H= would make no sense. We could,
-alternatively, contrive to make =H= denote something different from
+Now writing =exact and.right h= would make no sense. We could,
+alternatively, contrive to make =h= denote something different from
 the original hypothesis. This often happens with the =cases= and
 =induction= tactics, which revert hypotheses, peform an action, and
 then reintroduce new hypotheses with the same names.
 
 Metaprogramming in Lean requires us to be mindful of and explicit
 about the distinction between expressions in the current environment,
-like =H : A ∧ B= in the hypothesis of the example, and the Lean
-objects that we use to act on the tactic state, such as the name "H"
+like =h : a ∧ b= in the hypothesis of the example, and the Lean
+objects that we use to act on the tactic state, such as the name "h"
 or an object of type =expr=. Without using the =begin...end= front
 end, we can construct the proof as follows:
 #+BEGIN_SRC lean_text
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   to_expr `(and.right H) >>= exact,
-   to_expr `(and.left H) >>= exact
+   to_expr `(and.right h) >>= exact,
+   to_expr `(and.left h) >>= exact
 -- END
 #+END_SRC
-This tells Lean to elaborate the expressions =and.right H= and
-=and.left H= in the context of the current goal, and then apply
+This tells Lean to elaborate the expressions =and.right h= and
+=and.left h= in the context of the current goal, and then apply
 them. The =begin...end= construct is essentially a front end that
 interprets the proof above in these terms. 
 
@@ -365,7 +383,7 @@ name. You can use =mk_fresh_name= for that:
 open tactic
 
 -- BEGIN
-example (A : Prop) : A → A :=
+example (a : Prop) : a → a :=
 by do n ← mk_fresh_name,
       intro n,
       hyp ← get_local n,
@@ -390,17 +408,17 @@ tactic returns the current goal, which is an expression, and that
 solve the current goal, that is, a list of expressions.
 
 Returning to the example at the start of this section, let us consider
-ways of constructing the expressions =and.left H= and =and.right H=
+ways of constructing the expressions =and.left h= and =and.right h=
 more explicitly. The following example uses the =mk_mapp= tactic.
 #+BEGIN_SRC lean
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   eH ← get_local `H,
-   mk_mapp ``and.right [none, none, some eH] >>= exact,
-   mk_mapp ``and.left [none, none, some eH] >>= exact
+   eh ← get_local `h,
+   mk_mapp ``and.right [none, none, some eh] >>= exact,
+   mk_mapp ``and.left [none, none, some eh] >>= exact
 -- END
 #+END_SRC
 In this example, the invocations of =mk_mapp= retrieve the definition
@@ -421,29 +439,29 @@ list of its arguments.
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-      eA ← get_local `A,
-      eB ← get_local `B,
-      eH ← get_local `H,
-      mk_app ``and.right [eA, eB, eH] >>= exact,
-      mk_app ``and.left [eA, eB, eH] >>= exact
+      ea ← get_local `a,
+      eb ← get_local `b,
+      eh ← get_local `h,
+      mk_app ``and.right [ea, eb, eh] >>= exact,
+      mk_app ``and.left [ea, eb, eh] >>= exact
 -- END
 #+END_SRC
 You can send less than the full list of arguments to =mk_app=, but the
 arguments you send are assumed to be the /final/ arguments, with the
 earlier ones made implicit. Thus, in the example above, we could send
-instead =[eB, eH]= or simply =[eH]=, because the earlier arguments can
+instead =[eb, eh]= or simply =[eh]=, because the earlier arguments can
 be inferred from these.
 #+BEGIN_SRC lean
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-      eH ← get_local `H,
-      mk_app ``and.right [eH] >>= exact,
-      mk_app ``and.left [eH] >>= exact
+      eh ← get_local `h,
+      mk_app ``and.right [eh] >>= exact,
+      mk_app ``and.left [eh] >>= exact
 -- END
 #+END_SRC
 Finally, as indicated in the last section, you can also use =mk_const=
@@ -452,13 +470,13 @@ to construct a constant expression from the corresponding name:
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-      eH ← get_local `H,
+      eh ← get_local `h,
       mk_const ``and.right >>= apply,
-      exact eH,
+      exact eh,
       mk_const ``and.left >>= apply,
-      exact eH
+      exact eh
 -- END
 #+END_SRC
 
@@ -469,13 +487,13 @@ current goal.
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   to_expr `(and.right H) >>= exact,
-   to_expr `(and.left H) >>= exact
+   to_expr `(and.right h) >>= exact,
+   to_expr `(and.left h) >>= exact
 -- END
 #+END_SRC
-Here, the expressions =`(and.right H)= and =`(and.left H)= are
+Here, the expressions =`(and.right h)= and =`(and.left h)= are
 pre-expressions, that is, objects of type =pexpr=. The interface to
 =pexpr= can be found in the file =pexpr.lean=, but the type is largely
 opaque from within Lean. The canonical use is given by the example
@@ -494,23 +512,22 @@ Lean's pre-expression mechanism also supports the use of
 /anti-quotation/, which allows a tactic to tell the elaborator to
 insert an expression into a pre-expression at runtime. Returning to
 the example above, suppose we are in a situation where instead of the
-name =H=, we have the corresponding /expression/, =eH=, and want to
+name =h=, we have the corresponding /expression/, =eh=, and want to
 use that to construct the term. We can insert it into the
 pre-expression by preceding it with a double-percent sign:
 #+BEGIN_SRC lean_text
 open tactic
 
 -- BEGIN
-example (A B : Prop) (H : A ∧ B) : B ∧ A :=
+example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   eH ← get_local `H,
-   to_expr `(and.right %%eH) >>= exact,
-   to_expr `(and.left %%eH) >>= exact
+   eh ← get_local `h,
+   to_expr `(and.right %%eh) >>= exact,
+   to_expr `(and.left %%eh) >>= exact
 -- END
 #+END_SRC
 When the tactic is executed, Lean elaborates the pre-expressions given
-by =`(...)=, with the expression =eH= inserted in the right place.
-
+by =`(...)=, with the expression =eh= inserted in the right place.
 
 ** Examples
 
@@ -532,25 +549,25 @@ namespace hide
 -- BEGIN
 meta def find_same_type : expr → list expr → tactic expr
 | e []         := failed
-| e (H :: Hs) :=
-  do t ← infer_type H,
-     (unify e t >> return H) <|> find_same_type e Hs
+| e (h :: hs) :=
+  do t ← infer_type h,
+     (unify e t >> return h) <|> find_same_type e hs
 
 meta def assumption : tactic unit :=
 do ctx ← local_context,
    t   ← target,
-   H   ← find_same_type t ctx,
-   exact H
+   h   ← find_same_type t ctx,
+   exact h
 <|> fail "assumption tactic failed"
 -- END
 end hide
 #+END_SRC
-The expression =find_same_type t es= tries to find in es an expression
-with type definitionally equal to =t= in the list of expressions =es=,
-by a straightforward recursion on the list. The =infer_type= tactic
-calls Lean's internal type inference mechanism to infer to the type of
-an expression, and the =unify= tactic (which will be discussed further
-in Section [[#Metavariables_and_Unification][Metavariables and Unification]]) tries to unify two
+The expression =find_same_type t es= tries to find in =es= an
+expression with type definitionally equal to =t= in the list of
+expressions =es=, by a straightforward recursion on the list. The
+=infer_type= tactic calls Lean's internal type inference mechanism to
+infer to the type of an expression, and the =unify= tactic (which will
+be discussed further in Section [[#Metavariables_and_Unification][Section 8.6]] tries to unify two
 expressions, instantiating metavariables if necessary. Note the use of
 the =orelse= notation: if the unification fails, the procedure
 backtracks and continues to try the remaining elements on the
@@ -564,59 +581,42 @@ and applies the first one that succeeds:
 open tactic
 
 -- BEGIN
-meta def first {A : Type} : list (tactic A) → tactic A
+meta def first {α : Type} : list (tactic α) → tactic α
 | []      := fail "first tactic failed, no more alternatives"
 | (t::ts) := t <|> first ts
 -- END
 #+END_SRC
 It fails if none of the tactics on the list succeeds. Consider the
-example from Section [[file:01_Introduction.org::#Metaprogramming_in_Lean][Metaprogramming in Lean]] of the Introduction:
+example from [[file:01_Introduction.org::#Metaprogramming_in_Lean][Section 1.4]] of the Introduction:
 #+BEGIN_SRC lean
 open tactic monad expr
 
--- TODO: put this in list?
-meta def forl {A B : Type} (l : list A) (f : A → B) : list B :=
-map f l
-
--- TODO: put this in expr
-meta def head_symbol : expr → name
-| (const n a)      := n
-| (app e a)        := match (get_app_fn e) with
-                      | (const n l) := n
-                      | a           := `none
-                      end
-| (pi a₁ a₂ a₃ a₄) := `pi
-| a                := `none
-
--- TODO: add this to tactic?
--- assuming (P : T), create a fresh name H, and add assert H : T
-meta def assert_fact (P : expr) : tactic unit :=
-do n ← mk_fresh_name,
-   t ← infer_type P,
-   assertv n t P
-
 -- BEGIN
 meta def destruct_conjunctions : tactic unit :=
-repeat
-  (do l ← local_context,
-      first $ forl l (λ h,
-        do ht ← infer_type h >>= whnf,
-           if head_symbol ht = ``and then do
-              mk_mapp ``and.left [none, none, some h] >>= assert_fact,
-              mk_mapp ``and.right [none, none, some h] >>= assert_fact,
-              clear h
-           else failed))
+repeat (do
+  l ← local_context,
+  first $ l^.for (λ h, do
+    ht ← infer_type h >>= whnf,
+    match ht with
+    | ``(and %%a %%b) := do
+      n ← get_unused_name `h none,
+      mk_mapp ``and.left [none, none, some h] >>= assertv n a,
+      n ← get_unused_name `h none,
+      mk_mapp ``and.right [none, none, some h] >>= assertv n b,
+      clear h
+    | _ := failed
+    end))
 -- END
 #+END_SRC
 The =repeat= tactic simply repeats the inner block until it fails. The
-inner block starts by getting the local context. The =forl= term is
-just the list =map= function with the order reversed: for each element
-=h= of =l=, it constructs the tactic described in the second
-argument. The result is a list of tactics. The =first= function then
-calls each one sequentially until one of them succeeds. Note the use
-of the dollar-sign for function application. In general, an expression
-=f $ a= denotes nothing more than =f a=, but the binding strength is
-such that you do not need to use extra parentheses when =a= is a long
+inner block starts by getting the local context. The expression
+=l^.map l ...= is just shorthand for =list.map ... l=; it applies the
+function in =...= to each element of =l= and returns the resulting
+list, in this case a list of tactics. The =first= function then calls
+each one sequentially until one of them succeeds. Note the use of the
+dollar-sign for function application. In general, an expression =f $
+a= denotes nothing more than =f a=, but the binding strength is such
+that you do not need to use extra parentheses when =a= is a long
 expression. This provides a convenient idiom in situations exactly
 like the one in the example.
 
@@ -664,9 +664,9 @@ open tactic
 set_option pp.beta false
 
 section
-  variables {A : Type} (a b : A)
+  variables {α : Type} (a b : α)
 
-  example : (λ x : A, a) b = a :=
+  example : (λ x : α, a) b = a :=
   by do goal ← target,
         match expr.is_eq goal with
         | (some (e₁, e₂)) := do trace e₁,
@@ -675,7 +675,7 @@ section
         | none            := failed
         end
 
-  example : (λ x : A, a) b = a :=
+  example : (λ x : α, a) b = a :=
   by do goal ← target,
         match expr.is_eq goal with
         | (some (e₁, e₂)) := do trace e₁,
@@ -685,7 +685,7 @@ section
         end
 
   attribute [reducible]
-  definition foo (a b : A) : A := a
+  definition foo (a b : α) : α := a
 
   example : foo a b = a :=
   by do goal ← target,
@@ -706,7 +706,6 @@ section
         end
 end
 #+END_SRC
-
 
 ** Metavariables and Unification
 :PROPERTIES:

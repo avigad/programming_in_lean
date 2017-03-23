@@ -99,6 +99,7 @@ have the expected behavior. Here, for example, is a program that
 prints "hello world":
 #+BEGIN_SRC lean
 import system.io
+open io
 
 def hello_world : io unit :=
 put_str "hello world\n"
@@ -108,7 +109,7 @@ vm_eval hello_world
 The next example prints the first 100 squares:
 #+BEGIN_SRC lean
 import system.io
-open nat
+open nat io
 
 def print_squares : ℕ → io unit
 | 0        := return ()
@@ -130,6 +131,7 @@ constants =io= and =put_str=, which have been forcibly added to the
 axiomatic system.
 #+BEGIN_SRC lean
 import system.io
+open io
 
 def hello_world : io unit :=
 put_str "hello world\n"
@@ -179,7 +181,7 @@ vm_eval m91 1000
 We can print out the first 120 values of =m91=:
 #+BEGIN_SRC lean
 import system.io
-open nat
+open nat io
 
 meta def m91 : ℕ → ℕ
 | n := if n > 100 then n - 10 else m91 (m91 (n + 11))
@@ -221,81 +223,54 @@ next example assumes you are familiar with the notion of a tactic, as
 described in /Theorem Proving in Lean/.
 
 The following code implements a tactic that, given any goal,
-repeatedly finds a hypothesis =H= of the form =A ∧ B=, and
-replaces it by hypotheses (with fresh names) for =A= and =B=.
+repeatedly finds a hypothesis =h= of the form =a ∧ b=, and
+replaces it by hypotheses (with fresh names) for =a= and =b=.
 #+BEGIN_SRC lean
 open tactic monad expr
 
--- TODO: put this in expr
-meta def head_symbol : expr → name
-| (const n a)      := n
-| (app e a)        := match (get_app_fn e) with
-                      | (const n l) := n
-                      | a           := `none
-                      end
-| (pi a₁ a₂ a₃ a₄) := `pi
-| a                := `none
-
--- TODO: add this to tactic?
--- assuming (P : T), create a fresh name H, and add assert H : T
-meta def assert_fact (P : expr) : tactic unit :=
-do n ← mk_fresh_name,
-   t ← infer_type P,
-   assertv n t P
-
 -- BEGIN
 meta def destruct_conjunctions : tactic unit :=
-repeat
-  (do l ← local_context,
-      first $ l^.for (λ h,
-        do ht ← infer_type h >>= whnf,
-           if head_symbol ht = ``and then do
-              mk_mapp ``and.left [none, none, some h] >>= assert_fact,
-              mk_mapp ``and.right [none, none, some h] >>= assert_fact,
-              clear h
-           else failed))
+repeat (do
+  l ← local_context,
+  first $ l^.for (λ h, do
+    ht ← infer_type h >>= whnf,
+    match ht with
+    | ``(and %%a %%b) := do
+      n ← mk_fresh_name,
+      mk_mapp ``and.left [none, none, some h] >>= assertv n a,
+      n ← mk_fresh_name,
+      mk_mapp ``and.right [none, none, some h] >>= assertv n b,
+      clear h
+    | _ := failed
+    end))
 -- END
 #+END_SRC
-We will explain the details in Chapter [[file:08_Writing_Tactics.org::#Writing_Tactics][Writing Tactics]], but, roughly
-speaking, the code repeats the following action until there is nothing
-left to do: get the list of hypotheses in the local context, find a
-hypothesis =H= whose type is a conjunction, add new hypotheses
-justified by =and.left H= and =and.right H= to the local context, and
-then delete =H=. We can then use =destruct_conjunctions= like any
-other Lean tactic.
+We will explain the details in [[file:08_Writing_Tactics.org::#Writing_Tactics][Chapter 8]] but, roughly speaking, the
+code repeats the following action until there is nothing left to do:
+get the list of hypotheses in the local context, find a hypothesis =h=
+whose type is a conjunction, add new hypotheses justified by =and.left
+h= and =and.right h= to the local context, and then delete =h=. We can
+then use =destruct_conjunctions= like any other Lean tactic.
 #+BEGIN_SRC lean
 open tactic monad expr
 
--- TODO: put this in expr
-meta def head_symbol : expr → name
-| (const n a)      := n
-| (app e a)        := match (get_app_fn e) with
-                      | (const n l) := n
-                      | a           := `none
-                      end
-| (pi a₁ a₂ a₃ a₄) := `pi
-| a                := `none
-
--- TODO: add this to tactic?
--- assuming (P : T), create a fresh name H, and add H : P
-meta def assert_fact (P : expr) : tactic unit :=
-do n ← mk_fresh_name,
-   t ← infer_type P,
-   assertv n t P
-
 meta def destruct_conjunctions : tactic unit :=
-repeat
-  (do l ← local_context,
-      first $ l^.for (λ h,
-        do ht ← infer_type h >>= whnf,
-           if head_symbol ht = ``and then do
-              mk_mapp ``and.left [none, none, some h] >>= assert_fact,
-              mk_mapp ``and.right [none, none, some h] >>= assert_fact,
-              clear h
-           else failed))
+repeat (do
+  l ← local_context,
+  first $ l^.for (λ h, do
+    ht ← infer_type h >>= whnf,
+    match ht with
+    | ``(and %%a %%b) := do
+      n ← get_unused_name `h none,
+      mk_mapp ``and.left [none, none, some h] >>= assertv n a,
+      n ← get_unused_name `h none,
+      mk_mapp ``and.right [none, none, some h] >>= assertv n b,
+      clear h
+    | _ := failed
+    end))
 
 -- BEGIN
-example (a b c : Prop) (H : (a ∧ b) ∧ (c ∧ a)) : c :=
+example (a b c : Prop) (h : (a ∧ b) ∧ (c ∧ a)) : c :=
 begin destruct_conjunctions >> assumption end
 -- END
 #+END_SRC
