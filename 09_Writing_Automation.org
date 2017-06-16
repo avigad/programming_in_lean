@@ -239,7 +239,8 @@ open tactic expr
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
    p ← infer_type prf,
-   assertv nh p prf
+   assertv nh p prf,
+   return ()
 
 meta def is_conj (e : expr) : tactic bool :=
 do t ← infer_type e,
@@ -282,7 +283,7 @@ open tactic expr
 
 -- BEGIN
 meta def deny_conclusion : tactic unit :=
-do refine `(classical.by_contradiction _),
+do refine ```(classical.by_contradiction _),
    nh ← get_unused_name `h none,
    intro nh,
    return ()
@@ -306,7 +307,7 @@ open tactic expr
 -- BEGIN
 meta def find_disj : tactic (option expr) :=
 do l ← local_context,
-   (first $ l^.for
+   (first $ l.map
      (λ h, do t ← infer_type h,
               cond (is_app_of t `or) 
                 (return (option.some h)) failed)) <|>
@@ -365,7 +366,8 @@ do hyps ← local_context,
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
    p ← infer_type prf,
-   assertv nh p prf
+   assertv nh p prf,
+   return ()
 
 meta def is_conj (e : expr) : tactic bool :=
 do t ← infer_type e,
@@ -387,14 +389,14 @@ do l ← local_context,
    monad.for' l split_conjs_at
 
 meta def deny_conclusion : tactic unit :=
-do refine `(classical.by_contradiction _),
+do refine ```(classical.by_contradiction _),
    nh ← get_unused_name `h none,
    intro nh,
    return ()
 
 meta def find_disj : tactic (option expr) :=
 do l ← local_context,
-   (first $ l^.for
+   (first $ l.map
      (λ h, do t ← infer_type h,
               cond (is_app_of t `or)
                 (return (option.some h)) failed)) <|>
@@ -495,7 +497,8 @@ do hyps ← local_context,
 meta def add_fact (prf : expr) : tactic unit :=
 do nh ← get_unused_name `h none,
    p ← infer_type prf,
-   assertv nh p prf
+   assertv nh p prf,
+   return ()
 
 meta def is_conj (e : expr) : tactic bool :=
 do t ← infer_type e,
@@ -517,14 +520,14 @@ do l ← local_context,
    monad.for' l split_conjs_at
 
 meta def deny_conclusion : tactic unit :=
-do refine `(classical.by_contradiction _),
+do refine ```(classical.by_contradiction _),
    nh ← get_unused_name `h none,
    intro nh,
    return ()
 
 meta def find_disj : tactic (option expr) :=
 do l ← local_context,
-   (first $ l^.for
+   (first $ l.map
      (λ h, do t ← infer_type h,
               cond (is_app_of t `or)
                 (return (option.some h)) failed)) <|>

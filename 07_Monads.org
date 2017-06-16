@@ -501,11 +501,12 @@ do write_x 5,
    return (y + 2)
 
 -- BEGIN
-eval foo init_reg
+#reduce foo init_reg
 -- END
 #+END_SRC
-The result is the pair =(15, registers.mk 5 15 8)=, consisting of the
-return value, =y=, paired with the values of the three registers.
+The result is the pair ~(17, {x := 5, y := 15, z := 8})~, consisting
+of the return value, =y=, paired with the values of the three
+registers.
 
 ** The IO monad
 
@@ -518,33 +519,38 @@ the status of interaction with the user. Lean's axiomatically declared
 constants include the following:
 #+BEGIN_SRC lean
 import system.io
+open io
 
-namespace hide
--- BEGIN
-constant put_str : string → io unit
-constant put_nat : nat → io unit
-constant get_line : io string
--- END
-end hide
+#check (@put_str : Π [ioi : io.interface], string → io unit)
+#check (@get_line : Π [ioi : io.interface], io string)
 #+END_SRC
+Here =io.interface= is a type class packing information needed to
+interpret the input output interface. Users can instantiate that type
+class in different ways, but they can also leave these variables
+uninstantiated in calls to Lean's virtual machine, which then
+substitutes the usual terminal io operations.
+
 The expression =put_str s= changes the =io= state by writing =s= to
 output; the return type, =unit=, indicates that no meaningful value is
 returned. The expression =put_nat n= does the analogous thing for a
 natural number, =n=. The expression =get_line=, in contrast; however
 you want to think of the change in =io= state, a =string= value is
-returned inside the monad. Again, thinking of the =io= monad as
-representing a state is somewhat heuristic, since within the Lean
-language, there is nothing that we can say about it. But when we run a
-Lean program , the interpreter does the right thing whenever it
-encounters the bind and return operations for the monad, as well as
-the constants above. In particular, in the example below, it ensures
-that the argument to =put_nat= is evaluated before the output is sent
-to the user, and that the expressions are printed in the right order.
+returned inside the monad. When we use the native virtual machine
+interpretation, thinking of the =io= monad as representing a state is
+somewhat heuristic, since within the Lean language, there is nothing
+that we can say about it. But when we run a Lean program, the
+interpreter does the right thing whenever it encounters the bind and
+return operations for the monad, as well as the constants above. In
+particular, in the example below, it ensures that the argument to
+=put_nat= is evaluated before the output is sent to the user, and that
+the expressions are printed in the right order.
 #+BEGIN_SRC lean
 import system.io
+open io
+variable [io.interface]
 
 -- BEGIN
-vm_eval put_str "hello " >> put_str "world!" >> put_nat (27 * 39)
+#eval put_str "hello " >> put_str "world!" >> put_str (to_string (27 * 39))
 -- END
 #+END_SRC
 

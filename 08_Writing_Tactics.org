@@ -208,11 +208,11 @@ variables a b : Prop
 example : a → b → a ∧ b :=
 by do eh1 ← intro `h1,
       eh2 ← intro `h2,
-      e ← to_expr `(and.intro h1 h2),
+      e ← to_expr ```(and.intro h1 h2),
       exact e
 -- END
 #+END_SRC
-Here, the construct =`(...)= is used to build a /pre-expression/, the
+Here, the construct =```(...)= is used to build a /pre-expression/, the
 tactic =to_expr= elaborates it and converts it to an expression, and
 the =exact= tactic applies it. In the next section, we will see even
 more variations on constructions like these, including tactics that
@@ -228,9 +228,9 @@ variables a b : Prop
 
 -- BEGIN
 meta def my_tactic : tactic unit :=
-do h1 ← intro `h1,
-   h2 ← intro `h2,
-   e ← to_expr ``(and.intro %%h1 %%h2),
+do eh1 ← intro `h1,
+   eh2 ← intro `h2,
+   e ← to_expr ``(and.intro %%eh1 %%eh2),
    exact e
 
 example : a → b → a ∧ b :=
@@ -292,8 +292,8 @@ open tactic
 -- BEGIN
 example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   to_expr `(and.right h) >>= exact,
-   to_expr `(and.left h) >>= exact
+   to_expr ```(and.right h) >>= exact,
+   to_expr ```(and.left h) >>= exact
 -- END
 #+END_SRC
 This tells Lean to elaborate the expressions =and.right h= and
@@ -489,16 +489,16 @@ open tactic
 -- BEGIN
 example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
-   to_expr `(and.right h) >>= exact,
-   to_expr `(and.left h) >>= exact
+   to_expr ```(and.right h) >>= exact,
+   to_expr ```(and.left h) >>= exact
 -- END
 #+END_SRC
-Here, the expressions =`(and.right h)= and =`(and.left h)= are
+Here, the expressions =```(and.right h)= and =```(and.left h)= are
 pre-expressions, that is, objects of type =pexpr=. The interface to
 =pexpr= can be found in the file =pexpr.lean=, but the type is largely
 opaque from within Lean. The canonical use is given by the example
 above: when Lean's parser encounters an expression of the form
-=`(...)=, it constructs the corresponding =pexpr=, which is simply an
+=```(...)=, it constructs the corresponding =pexpr=, which is simply an
 internal representation of the unelaborated term. The =to_expr= tactic
 then sends that object to the elaborator when the tactic is executed.
 
@@ -522,12 +522,21 @@ open tactic
 example (a b : Prop) (h : a ∧ b) : b ∧ a :=
 by do split,
    eh ← get_local `h,
-   to_expr `(and.right %%eh) >>= exact,
-   to_expr `(and.left %%eh) >>= exact
+   to_expr ``(and.right %%eh) >>= exact,
+   to_expr ``(and.left %%eh) >>= exact
 -- END
 #+END_SRC
 When the tactic is executed, Lean elaborates the pre-expressions given
-by =`(...)=, with the expression =eh= inserted in the right place.
+by =``(...)=, with the expression =eh= inserted in the right
+place. The difference between =``(...)= and =```(...)= is that the
+first resolves the names contained in the expression when the tactic
+is defined, whereas the second resolves them when the tactic is
+executed. Since the only name occurring in =and.left %%eh= is
+=and.left=, it is better to resolve it right away. However, in the
+expression =and.right h= above, =h= only comes into existence when
+the tatic is executed, and so we need to use the triple backtick.
+
+[TODO: describe =`(...)=, and improve the explanations]
 
 ** Examples
 
@@ -595,10 +604,10 @@ open tactic monad expr
 meta def destruct_conjunctions : tactic unit :=
 repeat (do
   l ← local_context,
-  first $ l^.for (λ h, do
+  first $ l.map (λ h, do
     ht ← infer_type h >>= whnf,
     match ht with
-    | ``(and %%a %%b) := do
+    | `(and %%a %%b) := do
       n ← get_unused_name `h none,
       mk_mapp ``and.left [none, none, some h] >>= assertv n a,
       n ← get_unused_name `h none,
@@ -610,7 +619,7 @@ repeat (do
 #+END_SRC
 The =repeat= tactic simply repeats the inner block until it fails. The
 inner block starts by getting the local context. The expression
-=l^.map l ...= is just shorthand for =list.map ... l=; it applies the
+=l.map ...= is just shorthand for =list.map ... l=; it applies the
 function in =...= to each element of =l= and returns the resulting
 list, in this case a list of tactics. The =first= function then calls
 each one sequentially until one of them succeeds. Note the use of the
