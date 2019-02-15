@@ -1,5 +1,5 @@
-Theorem Proving in Lean
-=======================
+Programming in Lean
+===================
 
 .. toctree::
     :numbered:
