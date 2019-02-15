@@ -1,11 +1,6 @@
-/*.html
-/*.aux
-/_minted*
-/programming_in_lean.*
-/gitHeadInfo.gin
-/pygments-main
-/node_modules
-/css
-/fonts
-/images
-/js
+/_build
+.*.sw?
+*.pyc
+__pycache__
+/.vscode
+/.venv
