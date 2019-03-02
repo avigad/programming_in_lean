@@ -357,23 +357,23 @@ def of =bind sa f= is as follows:
 λ s, match (sa s) with (a, s₀) := b a s₀
 #+END_SRC
 
-The library also defines operations =read= and =write= as follows:
+The library also defines operations =get= and =put= as follows:
 #+BEGIN_SRC lean
-def read {S : Type} : state S S :=
+def get {S : Type} : state S S :=
 λ s, (s, s)
 
-def write {S : Type} : S → state S unit :=
+def put {S : Type} : S → state S unit :=
 λ s₀ s, ((), s₀)
 #+END_SRC
-With the argument =S= implicit, =read= is simply the state computation
+With the argument =S= implicit, =get= is simply the state computation
 that does not change the current state, but also returns it as a
-value.  The value =write s₀= is the state computation which replaces
+value.  The value =put s₀= is the state computation which replaces
 any state =s= by =s₀= and returns =unit=. Notice that it is convenient
 to use =unit= for the output type any operation that does not return a
 value, though it may change the state.
 
 Returning to our example, we can implement the register state monad
-and more focused read and write operations as follows:
+and more focused get and put operations as follows:
 #+BEGIN_SRC lean
 open state
 
@@ -385,26 +385,26 @@ registers.mk 0 0 0
 
 @[reducible] def reg_state := state registers
 
-def read_x : reg_state ℕ :=
-do s ← read, return (registers.x s)
+def get_x : reg_state ℕ :=
+do s ← get, return (registers.x s)
 
-def read_y : reg_state ℕ :=
-do s ← read, return (registers.y s)
+def get_y : reg_state ℕ :=
+do s ← get, return (registers.y s)
 
-def read_z : reg_state ℕ :=
-do s ← read, return (registers.z s)
+def get_z : reg_state ℕ :=
+do s ← get, return (registers.z s)
 
-def write_x (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk n (registers.y s) (registers.z s))
+def put_x (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk n (registers.y s) (registers.z s))
 
-def write_y (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write(registers.mk (registers.x s) n (registers.z s))
+def put_y (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put(registers.mk (registers.x s) n (registers.z s))
 
-def write_z (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk (registers.x s) (registers.y s) n)
+def put_z (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk (registers.x s) (registers.y s) n)
 -- END
 #+END_SRC
 We can then write a little register program as follows:
@@ -418,39 +418,39 @@ registers.mk 0 0 0
 
 @[reducible] def reg_state := state registers
 
-def read_x : reg_state ℕ :=
-do s ← read, return (registers.x s)
+def get_x : reg_state ℕ :=
+do s ← get, return (registers.x s)
 
-def read_y : reg_state ℕ :=
-do s ← read, return (registers.y s)
+def get_y : reg_state ℕ :=
+do s ← get, return (registers.y s)
 
-def read_z : reg_state ℕ :=
-do s ← read, return (registers.z s)
+def get_z : reg_state ℕ :=
+do s ← get, return (registers.z s)
 
-def write_x (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk n (registers.y s) (registers.z s))
+def put_x (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk n (registers.y s) (registers.z s))
 
-def write_y (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write(registers.mk (registers.x s) n (registers.z s))
+def put_y (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put(registers.mk (registers.x s) n (registers.z s))
 
-def write_z (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk (registers.x s) (registers.y s) n)
+def put_z (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk (registers.x s) (registers.y s) n)
 
 -- BEGIN
 open nat
 
 def foo : reg_state ℕ :=
-do write_x 5,
-   write_y 7,
-   x ← read_x,
-   write_z (x + 3),
-   y ← read_y,
-   z ← read_z,
-   write_y (y + z),
-   y ← read_y,
+do put_x 5,
+   put_y 7,
+   x ← get_x,
+   put_z (x + 3),
+   y ← get_y,
+   z ← get_z,
+   put_y (y + z),
+   y ← get_y,
    return (y + 2)
 -- END
 #+END_SRC
@@ -466,42 +466,42 @@ registers.mk 0 0 0
 
 @[reducible] def reg_state := state registers
 
-def read_x : reg_state ℕ :=
-do s ← read, return (registers.x s)
+def get_x : reg_state ℕ :=
+do s ← get, return (registers.x s)
 
-def read_y : reg_state ℕ :=
-do s ← read, return (registers.y s)
+def get_y : reg_state ℕ :=
+do s ← get, return (registers.y s)
 
-def read_z : reg_state ℕ :=
-do s ← read, return (registers.z s)
+def get_z : reg_state ℕ :=
+do s ← get, return (registers.z s)
 
-def write_x (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk n (registers.y s) (registers.z s))
+def put_x (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk n (registers.y s) (registers.z s))
 
-def write_y (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write(registers.mk (registers.x s) n (registers.z s))
+def put_y (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put(registers.mk (registers.x s) n (registers.z s))
 
-def write_z (n : ℕ) : reg_state unit :=
-do s ← read, 
-   write (registers.mk (registers.x s) (registers.y s) n)
+def put_z (n : ℕ) : reg_state unit :=
+do s ← get, 
+   put (registers.mk (registers.x s) (registers.y s) n)
 
 open nat
 
 def foo : reg_state ℕ :=
-do write_x 5,
-   write_y 7,
-   x ← read_x,
-   write_z (x + 3),
-   y ← read_y,
-   z ← read_z,
-   write_y (y + z),
-   y ← read_y,
+do put_x 5,
+   put_y 7,
+   x ← get_x,
+   put_z (x + 3),
+   y ← get_y,
+   z ← get_z,
+   put_y (y + z),
+   y ← get_y,
    return (y + 2)
 
 -- BEGIN
-#reduce foo init_reg
+#reduce foo.run init_reg
 -- END
 #+END_SRC
 The result is the pair ~(17, {x := 5, y := 15, z := 8})~, consisting
