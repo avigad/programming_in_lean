@@ -1,3 +1,7 @@
+
+[![Build
+Status](https://travis-ci.org/avigad/programming_in_lean.svg?branch=master)](https://travis-ci.org/avigad/programming_in_lean)
+
 Programming in Lean
 -------------------
 
