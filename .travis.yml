@@ -1,3 +1,13 @@
+language: python
+addons:
+  apt:
+    packages:
+      - latexmk
+      - texlive
+      - texlive-xetex
+      # - pdflatex
+python:
+  - "3.6"
 cache:
   directories:
     - $TRAVIS_BUILD_DIR/test/
@@ -11,11 +21,19 @@ install:
     fi
   - source ~/.elan/env
   - (git status | grep  -e "Changes not staged for commit:"); RESULT=$?
+  - elan toolchain install 3.4.2
+  - elan default 3.4.2
   - if [ $RESULT -eq 0 ]; then git checkout -f HEAD ; fi
   - git clean -d -f -q
   # - ./purge_olean.sh
-  - rm mathlib.txt || true
+  # - rm mathlib.txt || true
+  # - pip3 install python3-venv
+  # - pip install --user travis-sphinx
+  - make install-deps
+  - export PATH=$HOME/.local/bin:$PATH
+
 
 script:
-  - make
-  - make leantest
+  - make html
+  - make latexpdf
+  # - make leantest

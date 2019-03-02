@@ -23,8 +23,7 @@ from variables of type ``Prop`` and the constants ``true`` and ``false``
 using the connectives ``∧ ∨ → ↔ ¬``. The proof procedure proceeds as
 follows:
 
--  Negate the conclusion, so that the goal becomes ``a, b, c, ¬ d ⊢
-    false``.
+-  Negate the conclusion, so that the goal becomes ``a, b, c, ¬ d ⊢ false``.
 
 -  Put all formulas into *negation-normal form*. In other words,
    eliminate ``→`` and ``↔`` in terms of the other connectives, and
@@ -153,8 +152,8 @@ We can now use Lean's built-in simplifier to do the normalization:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
       monad.for' hyps (normalize_hyp lemmas)
    -- END
@@ -214,8 +213,8 @@ We can test the result:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
       monad.for' hyps (normalize_hyp lemmas)
 
@@ -251,14 +250,14 @@ The next five tactics handle the task of splitting conjunctions.
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
@@ -319,7 +318,7 @@ The next tactic finds a disjunction among the hypotheses, or returns the
    do l ← local_context,
       (first $ l.map
         (λ h, do t ← infer_type h,
-                 cond (is_app_of t `or) 
+                 cond (is_app_of t `or)
                    (return (option.some h)) failed)) <|>
       return none
    -- END
@@ -369,8 +368,8 @@ Our propositional prover can now be implemented as follows:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
       monad.for' hyps (normalize_hyp lemmas)
 
@@ -384,14 +383,14 @@ Our propositional prover can now be implemented as follows:
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
@@ -448,7 +447,7 @@ Notice the pattern matching in the ``do`` notation:
 
 .. code-block:: text
 
-   (option.some h) ← find_disj | 
+   (option.some h) ← find_disj |
              fail "prop_prover failed: unprovable goal"
 
 This is shorthand for the use of the ``bind`` operation in the tactic
@@ -504,8 +503,8 @@ All this is left for us to do is to try it out:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
       monad.for' hyps (normalize_hyp lemmas)
 
@@ -519,14 +518,14 @@ All this is left for us to do is to try it out:
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
@@ -592,4 +591,3 @@ All this is left for us to do is to try it out:
      by prop_prover
    end
    -- END
-
