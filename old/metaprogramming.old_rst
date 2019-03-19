@@ -1,0 +1,132 @@
+.. _Metaprogramming:
+
+Metaprogramming
+===============
+
+Such definitions can be introduced using the keywords ``meta def``
+instead of ``def`` and are marked for special treatment. In particular,
+because they are not part of the axiomatic foundation, they cannot
+appear as part of ordinary Lean definitions and theorems.
+
+For example, the following definition computes McCarthy's 91 function,
+without verifying that the computation terminates on all inputs (though,
+in fact, it does):
+
+.. code-block:: lean
+
+   meta def m91 : ℕ → ℕ
+   | n := if n > 100 then n - 10 else m91 (m91 (n + 11))
+
+   #eval m91 10
+   #eval m91 100
+   #eval m91 1000
+
+We can print out the first 120 values of ``m91``:
+
+.. code-block:: lean
+
+   import system.io
+   open nat io
+
+   meta def m91 : ℕ → ℕ
+   | n := if n > 100 then n - 10 else m91 (m91 (n + 11))
+
+   -- BEGIN
+   meta def print_m91 : ℕ → io unit
+   | 0        := return ()
+   | (succ n) := print_m91 n >>
+                 put_str ("m91 " ++ nat.to_string n ++ " = " ++
+                          nat.to_string (m91 n) ++ "\n")
+
+   #eval print_m91 120
+   -- END
+
+Of course, such uses of recursion are dangerous.
+
+.. code-block:: lean
+
+   meta def foo : ℕ → ℕ
+   | n := foo n + 1
+
+   #reduce foo
+   -- #eval foo 0
+
+Evaluating ``foo`` using the kernel evaluator shows that the
+implementation is a bit of a hack; the term in the definition includes a
+macro which names ``foo`` itself. The virtual machine that evaluates foo
+goes further, and carries out the recursive call, repeating this until
+the process runs out of memory. It is a good thing that Lean will not
+allow ``foo`` to appear in a ``theorem`` or in an ordinary
+``definition``; if we could prove ``foo = foo + 1`` then, substracting
+``foo`` from both sides, we could prove ``0 = 1``, and hence a
+contradiction.
+
+Although metaprograms can be used in various ways, its primary purpose
+is to provide a means of extending the functionality of Lean, within
+Lean itself. For example, we can use metaprograms to write new
+procedures, known as *tactics*, which help us construct proofs. This
+next example assumes you are familiar with the notion of a tactic, as
+described in *Theorem Proving in Lean*.
+
+The following code implements a tactic that, given any goal, repeatedly
+finds a hypothesis ``h`` of the form ``a ∧ b``, and replaces it by
+hypotheses (with fresh names) for ``a`` and ``b``.
+
+.. code-block:: lean
+
+   open tactic monad expr
+
+   -- BEGIN
+   meta def destruct_conjunctions : tactic unit :=
+   repeat (do
+     l ← local_context,
+     first $ l^.for (λ h, do
+       ht ← infer_type h >>= whnf,
+       match ht with
+       | `(and %%a %%b) := do
+         n ← mk_fresh_name,
+         mk_mapp ``and.left [none, none, some h] >>= assertv n a,
+         n ← mk_fresh_name,
+         mk_mapp ``and.right [none, none, some h] >>= assertv n b,
+         clear h
+       | _ := failed
+       end))
+   -- END
+
+We will explain the details in `Chapter
+8 <08_Writing_Tactics.org::#Writing_Tactics>`__ but, roughly speaking,
+the code repeats the following action until there is nothing left to do:
+get the list of hypotheses in the local context, find a hypothesis ``h``
+whose type is a conjunction, add new hypotheses justified by ``and.left
+h`` and ``and.right h`` to the local context, and then delete ``h``. We
+can then use ``destruct_conjunctions`` like any other Lean tactic.
+
+.. code-block:: lean
+
+   open tactic monad expr
+
+   meta def destruct_conjunctions : tactic unit :=
+   repeat (do
+     l ← local_context,
+     first $ l^.for (λ h, do
+       ht ← infer_type h >>= whnf,
+       match ht with
+       | `(and %%a %%b) := do
+         n ← get_unused_name `h none,
+         mk_mapp ``and.left [none, none, some h] >>= assertv n a,
+         n ← get_unused_name `h none,
+         mk_mapp ``and.right [none, none, some h] >>= assertv n b,
+         clear h
+       | _ := failed
+       end))
+
+   -- BEGIN
+   example (a b c : Prop) (h : (a ∧ b) ∧ (c ∧ a)) : c :=
+   begin destruct_conjunctions >> assumption end
+   -- END
+
+Note that the reason we can use such code to prove theorems without
+compromising the integrity of the formal system is that Lean's kernel
+always certifies the result. From a foundational point of view, we don't
+have to worry about the integrity of the code, only the integrity of the
+resulting proofs.

@@ -1,0 +1,82 @@
+.. _Programming:
+
+Programming
+===========
+
+Examples
+--------
+
+For example…
+
+[Define something like factorial. Evaluate (use both ``reduce`` and
+``eval``).]
+
+[Define operations on lists.]
+
+[Prove things, like ``length (reverse l) = length l`` or ``reverse
+(reverse l) = l``.]
+
+Input and Output
+----------------
+
+People often want to write programs that interact with the outside
+world, querying users for input and presenting them with output during
+the course of a computation. Lean's foundational framework has no model
+of "the real world," but Lean declares ``get_str`` and ``put_str``
+commands to get an input string from the user and write an input string
+to output, respectively. Within the foundational system, these are
+treated as black box operations. But when programs are evaluated by
+Lean's virtual machine or when they are translated to C++, they have the
+expected behavior. Here, for example, is a program that prints "hello
+world":
+
+.. code-block:: lean
+
+import system.io
+open io
+
+def hello_world : io unit :=
+put_str "hello world\n"
+
+#eval hello_world
+
+The next example prints the first 100 squares:
+
+.. code-block:: lean
+
+   import system.io
+   open nat io
+
+   def print_squares : ℕ → io unit
+   | 0        := return ()
+   | (succ n) := print_squares n >>
+                 put_str (nat.to_string n ++ "^2 = " ++
+                          nat.to_string (n * n) ++ "\n")
+
+   #eval print_squares 100
+
+We will explain the data type ``io unit`` in Chapter Monads_. Although this program has a real world
+side effect of sending output to the screen when run, that effect is
+invisible to the formal foundation. From the latter's perspective, the
+type constructor ``io`` and the functions ``put_str`` and ``get_str``
+are entirely opaque, objects about which that the axiomatic system has
+nothing to say. The ``print
+axioms`` command shows that the expression ``hello world`` depends on
+the constants ``io`` and ``put_str``, which have been forcibly added to
+the axiomatic system.
+
+.. code-block:: lean
+
+   import system.io
+   open io
+
+   def hello_world : io unit :=
+   put_str "hello world\n"
+
+   -- BEGIN
+   #print axioms hello_world
+   -- END
+
+In this way, we can prove properties of programs involving ``io`` that
+do not depend in any way on the particular results of the input and
+output.
