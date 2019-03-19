@@ -2,7 +2,7 @@
 #
 # Programming in Lean documentation build configuration file, created by
 # Jeremy Avigad in 2019 (adapting other documentation setups).
-# 
+#
 # This file is execfile()d with the current directory set to its
 # containing dir.
 #
@@ -46,8 +46,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Programming in Lean'
-copyright = u'2017, Jeremy Avigad, Leonardo de Moura, and Simon Hudon'
-author = u'Jeremy Avigad, Leonardo de Moura, and Simon Hudon'
+copyright = u'2017, Jeremy Avigad and Simon Hudon'
+author = u'Jeremy Avigad and Simon Hudon'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
