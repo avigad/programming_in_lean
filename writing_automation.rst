@@ -3,60 +3,30 @@
 Writing Automation
 ==================
 
-The goal of this chapter is to provide some examples that illustrate the
-ways that metaprogramming in Lean can be used to implement automated
-proof procedures.
+The goal of this chapter is to provide some examples that illustrate the ways that metaprogramming in Lean can be used to implement automated proof procedures.
 
 A Tableau Prover for Classical Propositional Logic
 --------------------------------------------------
 
-In this section, we design a theorem prover that is complete for
-classical propositional logic. The method is essentially that of
-tableaux theorem proving, and, from a proof-theoretic standpoint, can be
-used to demonstrate the completeness of cut-free sequent calculi.
+In this section, we design a theorem prover that is complete for classical propositional logic. The method is essentially that of tableaux theorem proving, and, from a proof-theoretic standpoint, can be used to demonstrate the completeness of cut-free sequent calculi.
 
-The idea is simple. If ``a``, ``b``, ``c``, and ``d`` are formulas of
-propositional logic, the sequent ``a, b, c ⊢ d`` represents the goal of
-proving that ``d`` follows from ``a``, ``b`` and ``c``, and ``d``. The
-fact that they are propositional formulas means that they are built up
-from variables of type ``Prop`` and the constants ``true`` and ``false``
-using the connectives ``∧ ∨ → ↔ ¬``. The proof procedure proceeds as
-follows:
+The idea is simple. If ``a``, ``b``, ``c``, and ``d`` are formulas of propositional logic, the sequent ``a, b, c ⊢ d`` represents the goal of proving that ``d`` follows from ``a``, ``b`` and ``c``, and ``d``. The fact that they are propositional formulas means that they are built up from variables of type ``Prop`` and the constants ``true`` and ``false`` using the connectives ``∧ ∨ → ↔ ¬``. The proof procedure proceeds as follows:
 
--  Negate the conclusion, so that the goal becomes ``a, b, c, ¬ d ⊢
-    false``.
+-  Negate the conclusion, so that the goal becomes ``a, b, c, ¬ d ⊢ false``.
 
--  Put all formulas into *negation-normal form*. In other words,
-   eliminate ``→`` and ``↔`` in terms of the other connectives, and
-   using classical identities to push all equivalences inwards.
+-  Put all formulas into *negation-normal form*. In other words, eliminate ``→`` and ``↔`` in terms of the other connectives, and using classical identities to push all equivalences inwards.
 
--  At that stage, all formulas are built up from *literals*
-   (propositional variables and negated propositional variables) using
-   only ``∧`` and ``∨``. Now repeatedly apply all of the following proof
-   steps:
+-  At that stage, all formulas are built up from *literals* (propositional variables and negated propositional variables) using only ``∧`` and ``∨``. Now repeatedly apply all of the following proof steps:
 
-   -  Reduce a goal of the form ``Γ, a ∧ b ⊢ false`` to the goal
-      ``Γ, a, b ⊢ false``, where ``Γ`` is any set of propositional
-      formulas.
+   -  Reduce a goal of the form ``Γ, a ∧ b ⊢ false`` to the goal ``Γ, a, b ⊢ false``, where ``Γ`` is any set of propositional formulas.
 
-   -  Reduce a goal of the form ``Γ, a ∨ b ⊢ false`` to the pair of
-      goals ``Γ, a ⊢ false`` and ``Γ, b ⊢ false``.
+   -  Reduce a goal of the form ``Γ, a ∨ b ⊢ false`` to the pair of goals ``Γ, a ⊢ false`` and ``Γ, b ⊢ false``.
 
    -  Prove any goal of the form ``Γ, a, ¬ a ⊢ false`` in the usual way.
 
-It is not hard to show that this is complete. Each step preserves
-validity, in the sense that the original goal is provable if and only if
-the new ones are. And, in each step, the number of connectives in the
-goal decreases. If we ever face a goal in which the first two rules do
-not apply, the goal must consist of literals. In that case, if the last
-rule doesn't apply, then no propositional variable appears with its
-negation, and it is easy to cook up a truth assignment that falsifies
-the goal.
+It is not hard to show that this is complete. Each step preserves validity, in the sense that the original goal is provable if and only if the new ones are. And, in each step, the number of connectives in the goal decreases. If we ever face a goal in which the first two rules do not apply, the goal must consist of literals. In that case, if the last rule doesn't apply, then no propositional variable appears with its negation, and it is easy to cook up a truth assignment that falsifies the goal.
 
-In fact, our procedure will work with arbitrary formulas at the leaves.
-It simply applies reductions and rules as much as possible, so formulas
-that begin with anything other than a propositional connective are
-treated as black boxes, and act as propositional atoms.
+In fact, our procedure will work with arbitrary formulas at the leaves. It simply applies reductions and rules as much as possible, so formulas that begin with anything other than a propositional connective are treated as black boxes, and act as propositional atoms.
 
 First, let us open the namespaces we will use:
 
@@ -64,8 +34,7 @@ First, let us open the namespaces we will use:
 
    open expr tactic classical
 
-The next step is to gather all the facts we will need to put formulas in
-negation-normal form.
+The next step is to gather all the facts we will need to put formulas in negation-normal form.
 
 .. code-block:: lean
 
@@ -153,21 +122,13 @@ We can now use Lean's built-in simplifier to do the normalization:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
-      monad.for' hyps (normalize_hyp lemmas)
+      monad.mapm' (normalize_hyp lemmas) hyps
    -- END
 
-The tactic ``normalize_hyp`` just simplifies the given hypothesis with
-the given list of lemmas. The ``try`` combinator ensures that the tactic
-is deemed successful even if no simplifications are necessary. The
-tactic ``normalize_hyps`` gathers the local context, turns the list of
-names into a list of expressions by applying the ``mk_const`` tactic to
-each one, and then calls ``normalize_hyp`` on each element of the
-context with those lemmas. The ``for``' tactic, like the ``for`` tactic,
-applies the second argument to each element of the first, but it returns
-unit rather than accumulate the results in a list.
+The tactic ``normalize_hyp`` just simplifies the given hypothesis with the given list of lemmas. The ``try`` combinator ensures that the tactic is deemed successful even if no simplifications are necessary. The tactic ``normalize_hyps`` gathers the local context, turns the list of names into a list of expressions by applying the ``mk_const`` tactic to each one, and then calls ``normalize_hyp`` on each element of the context with those lemmas. The ``for``' tactic, like the ``for`` tactic, applies the second argument to each element of the first, but it returns unit rather than accumulate the results in a list.
 
 We can test the result:
 
@@ -214,10 +175,10 @@ We can test the result:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
-      monad.for' hyps (normalize_hyp lemmas)
+      monad.mapm' (normalize_hyp lemmas) hyps
 
    -- BEGIN
    example (p q r : Prop) (h₁ : ¬ (p ↔ (q ∧ ¬ r))) (h₂ : ¬ (p → (q → ¬ r))) : true :=
@@ -251,39 +212,24 @@ The next five tactics handle the task of splitting conjunctions.
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
    meta def split_conjs : tactic unit :=
    do l ← local_context,
-      monad.for' l split_conjs_at
+      monad.mapm' split_conjs_at l
 
-The tactic ``add_fact prf`` takes a proof of a proposition ``p``, and
-adds ``p`` the the local context with a fresh name. Here,
-:literal:`get_unused_name `h
-none` generates a fresh name of the form ``h_n``, for a numeral ``n``.
-The tactic ``is_conj`` infers the type of a given expression, and
-determines whether or not it is a conjunction. The tactic
-``add_conjuncts e`` assumes that the type of ``e`` is a conjunction and
-adds proofs of the left and right conjuncts to the context, recursively
-splitting them if they are conjuncts as well. The tactic
-``split_conjs_at h`` tests whether or not the hypothesis ``h`` is a
-conjunction, and, if so, adds all its conjuncts and then clears it from
-the context. The last tactic, ``split_conjs``, applies this to every
-element of the context.
+The tactic ``add_fact prf`` takes a proof of a proposition ``p``, and adds ``p`` the the local context with a fresh name. Here, ``get_unused_name \`h none`` generates a fresh name of the form ``h_n``, for a numeral ``n``. The tactic ``is_conj`` infers the type of a given expression, and determines whether or not it is a conjunction. The tactic ``add_conjuncts e`` assumes that the type of ``e`` is a conjunction and adds proofs of the left and right conjuncts to the context, recursively splitting them if they are conjuncts as well. The tactic ``split_conjs_at h`` tests whether or not the hypothesis ``h`` is a conjunction, and, if so, adds all its conjuncts and then clears it from the context. The last tactic, ``split_conjs``, applies this to every element of the context.
 
-We need two more small tactics before we can write our propositional
-prover. The first reduces the task of proving a statement ``p`` from
-some hypotheses to the task of proving falsity from those hypotheses and
-the negation of ``p``.
+We need two more small tactics before we can write our propositional prover. The first reduces the task of proving a statement ``p`` from some hypotheses to the task of proving falsity from those hypotheses and the negation of ``p``.
 
 .. code-block:: lean
 
@@ -297,18 +243,9 @@ the negation of ``p``.
       return ()
    -- END
 
-The refine tactic applies the expression in question to the goal, but
-leaves any remaining metavariables for us to fill. The theorem
-``classical.by_contradiction`` has type ``∀ {p : Prop},
-(¬p → false) → p``, so applying this theorem proves the goal but leaves
-us with the new goal of proving ``¬p → false`` from the same hypotheses,
-at which point, we can use the introduction rule for implication. If we
-omit the ``return ()``, we will get an error message, because
-``deny_conclusion`` is supposed to have type ``tactic unit``, but the
-``intro`` tactic returns an expression.
+The refine tactic applies the expression in question to the goal, but leaves any remaining metavariables for us to fill. The theorem ``classical.by_contradiction`` has type ``∀ {p : Prop}, (¬p → false) → p``, so applying this theorem proves the goal but leaves us with the new goal of proving ``¬p → false`` from the same hypotheses, at which point, we can use the introduction rule for implication. If we omit the ``return ()``, we will get an error message, because ``deny_conclusion`` is supposed to have type ``tactic unit``, but the ``intro`` tactic returns an expression.
 
-The next tactic finds a disjunction among the hypotheses, or returns the
-``option.none`` if there aren't any.
+The next tactic finds a disjunction among the hypotheses, or returns the ``option.none`` if there aren't any.
 
 .. code-block:: lean
 
@@ -319,7 +256,7 @@ The next tactic finds a disjunction among the hypotheses, or returns the
    do l ← local_context,
       (first $ l.map
         (λ h, do t ← infer_type h,
-                 cond (is_app_of t `or) 
+                 cond (is_app_of t `or)
                    (return (option.some h)) failed)) <|>
       return none
    -- END
@@ -369,10 +306,10 @@ Our propositional prover can now be implemented as follows:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
-      monad.for' hyps (normalize_hyp lemmas)
+      monad.mapm' hyps (normalize_hyp lemmas)
 
    meta def add_fact (prf : expr) : tactic unit :=
    do nh ← get_unused_name `h none,
@@ -384,20 +321,20 @@ Our propositional prover can now be implemented as follows:
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
    meta def split_conjs : tactic unit :=
    do l ← local_context,
-      monad.for' l split_conjs_at
+      monad.mapm' split_conjs_at l
 
    meta def deny_conclusion : tactic unit :=
    do refine ```(classical.by_contradiction _),
@@ -431,33 +368,16 @@ Our propositional prover can now be implemented as follows:
       prop_prover_aux 30
    -- END
 
-The tactic ``prop_prover`` denies the conclusion, reduces the hypotheses
-to negation-normal form, and calls ``prop_prover_aux`` with a maximum
-splitting depth of 30. The tactic ``prop_prover_aux`` executes the
-following simple loop. First, it splits any conjunctions in the
-hypotheses. Then it tries applying the ``contradiction`` tactic, which
-will find a pair of contradictory literals, ``p`` and ``¬ p``, if there
-is one. If that does not succeed, it looks for a disjunction ``h`` among
-the hypotheses. At this stage, if there aren't any disjunctions, we know
-that the goal is not propositionally valid. On the other hand, if there
-is a disjunction, ``prop_prover_aux`` calls the ``cases`` tactic to
-split the disjunction, and then applies itself recursively to each of
-the resulting subgoals, decreasing the splitting depth by one.
+The tactic ``prop_prover`` denies the conclusion, reduces the hypotheses to negation-normal form, and calls ``prop_prover_aux`` with a maximum splitting depth of 30. The tactic ``prop_prover_aux`` executes the following simple loop. First, it splits any conjunctions in the hypotheses. Then it tries applying the ``contradiction`` tactic, which will find a pair of contradictory literals, ``p`` and ``¬ p``, if there is one. If that does not succeed, it looks for a disjunction ``h`` among the hypotheses. At this stage, if there aren't any disjunctions, we know that the goal is not propositionally valid. On the other hand, if there is a disjunction, ``prop_prover_aux`` calls the ``cases`` tactic to split the disjunction, and then applies itself recursively to each of the resulting subgoals, decreasing the splitting depth by one.
 
 Notice the pattern matching in the ``do`` notation:
 
 .. code-block:: text
 
-   (option.some h) ← find_disj | 
+   (option.some h) ← find_disj |
              fail "prop_prover failed: unprovable goal"
 
-This is shorthand for the use of the ``bind`` operation in the tactic
-monad to extract the result of ``find_disj``, together with the use of a
-``match`` statement to extract the result. The expression after the
-vertical bar is the value returned for any other case in the pattern
-match; in this case, it is the value returned if ``find_disj`` returns
-``none``. This is a common idiom when writing tactics, and so the
-compressed notation is handy.
+This is shorthand for the use of the ``bind`` operation in the tactic monad to extract the result of ``find_disj``, together with the use of a ``match`` statement to extract the result. The expression after the vertical bar is the value returned for any other case in the pattern match; in this case, it is the value returned if ``find_disj`` returns ``none``. This is a common idiom when writing tactics, and so the compressed notation is handy.
 
 All this is left for us to do is to try it out:
 
@@ -504,10 +424,10 @@ All this is left for us to do is to try it out:
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies, 
-            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff, 
+      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+            ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
             ``not_true_iff, ``not_false_iff],
-      monad.for' hyps (normalize_hyp lemmas)
+      monad.mapm' (normalize_hyp lemmas) hyps
 
    meta def add_fact (prf : expr) : tactic unit :=
    do nh ← get_unused_name `h none,
@@ -519,20 +439,20 @@ All this is left for us to do is to try it out:
    do t ← infer_type e,
       return (is_app_of t `and)
 
-   meta def add_conjuncts : expr → tactic unit | e := 
+   meta def add_conjuncts : expr → tactic unit | e :=
    do e₁ ← mk_app `and.left [e],
       monad.cond (is_conj e₁) (add_conjuncts e₁) (add_fact e₁),
       e₂ ← mk_app `and.right [e],
       monad.cond (is_conj e₂) (add_conjuncts e₂) (add_fact e₂)
 
    meta def split_conjs_at (h : expr) : tactic unit :=
-   do monad.cond (is_conj h) 
+   do monad.cond (is_conj h)
         (add_conjuncts h >> clear h)
         skip
 
    meta def split_conjs : tactic unit :=
    do l ← local_context,
-      monad.for' l split_conjs_at
+      monad.mapm' split_conjs_at l
 
    meta def deny_conclusion : tactic unit :=
    do refine ```(classical.by_contradiction _),
@@ -592,4 +512,3 @@ All this is left for us to do is to try it out:
      by prop_prover
    end
    -- END
-
