@@ -6,6 +6,8 @@ Programming in Lean
     :maxdepth: 2
 
     introduction
+    data_and_types
+    programming
     monads
     writing_tactics
     writing_automation

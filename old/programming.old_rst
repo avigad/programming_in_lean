@@ -80,3 +80,309 @@ the axiomatic system.
 In this way, we can prove properties of programs involving ``io`` that
 do not depend in any way on the particular results of the input and
 output.
+
+
+
+Monads
+------
+
+This section assumes that you are familiar with the use of monads in
+functional programming languages, such as Haskell. There are a number of
+tutorials on monads available online, including a chapter of :numref:`Section %s <Nonconstructive_Definitions>
+:numref:`Programming in
+Lean <https://leanprover.github.io/programming_in_lean/>`__.
+
+Monads are well supported in Lean: they are straightforward to encode in
+dependent type theory, and class inference can be used to infer monads
+associated with specific types. Lean knows about the option monad:
+
+.. code:: lean
+
+   open list
+
+   def foo (l₁ l₂ l₃ : list ℕ) : option (list ℕ) :=
+   do v₁₀ ← nth l₁ 0,
+      v₂₀ ← nth l₂ 0,
+      v₂₁ ← nth l₂ 1,
+      v₃₀ ← nth l₃ 0,
+      v₃₁ ← nth l₃ 1,
+      v₃₂ ← nth l₃ 2,
+      return [v₁₀, v₂₀, v₂₁, v₃₀, v₃₁, v₃₂]
+
+   #eval foo [1, 2, 3] [4, 5] [6, 7]
+   #eval foo [1, 2, 3] [4, 5] [6, 7, 8]
+
+Here, if an calls to ``nth`` return ``none``, ``foo`` returns ``none``
+as well. But if all the calls are successful, the function constructs
+the value on the last line and returns it wrapped with the ``some``
+constructor.
+
+Lean also knows about the list monad:
+
+.. code:: lean
+
+   open list
+
+   def foo : list string :=
+   do n ← range 10,
+      a ← ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+      repeat a n
+
+   #eval foo
+
+Think of the body of ``foo`` is choosing a value ``n``
+nondeterministically from ``range 10``, and a value ``a``
+nondeterministically from the given list, and returning the value
+``repeat a n``, which simply repeats the element ``a`` ``n`` times. In
+fact, ``repeat a n`` is computed for each choices of ``n`` and ``a``,
+and the results are concatenated into a single list.
+
+The standard library also defines a state monad, and a special
+``tactic`` monad provides metaprogramming access to an internal tactic
+state, allowing users to write tactics in Lean. We will return to this
+in a later chapter.
+
+Input and Output
+----------------
+
+Lean can access standard input and output via a special ``io`` monad.
+From within the foundational system, the functions ``put_str`` and
+``get_str`` are simply unaxiomatized constants, but when executed by the
+virtual machine, the perform the desired operations.
+
+The input faculty can only be used when running Lean from a command
+line, but standard output is associated to function calls in the editor.
+The following example uses the ``io`` monad to output a list of
+instructions solving the *Tower of Hanoi* game for any number of disks.
+
+.. code:: lean
+
+   import system.io
+   variable [io.interface]
+   open io
+
+   def hanoi_aux : ℕ → string → string → string → io unit
+   | 0     fr to aux := put_str "nothing to do!\n"
+   | 1     fr to aux := put_str ("move disk 1 from " ++ fr ++ " to " ++
+                                  to ++ "\n")
+   | (n+2) fr to aux := do hanoi_aux (n+1) fr aux to,
+                           put_str ("move disk " ++ to_string (n+2) ++
+                                    " from " ++ fr ++ " to " ++ to ++ "\n"),
+                           hanoi_aux (n+1) aux to fr
+
+   def hanoi (n : ℕ) := hanoi_aux n "A" "B" "C"
+
+   #eval hanoi 5
+
+An Example: Abstract Syntax
+---------------------------
+
+We close this chapter with an example that nicely illustrates the
+capacities for algebraic abstraction in Lean and the CIC. We first
+define an abstract type of arithmetic expressions, each of which is
+either a variable, a numeral, a sum, or a product.
+
+.. code:: lean
+
+   inductive arith_expr
+   | var   : ℕ → arith_expr
+   | const : ℕ → arith_expr
+   | plus  : arith_expr → arith_expr → arith_expr
+   | times : arith_expr → arith_expr → arith_expr
+
+   open arith_expr
+
+   def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+
+Notice that the variables are indexed by the natural numbers.
+
+We can evaluate an arithmetic expression in any semiring, given an
+assignment to the variables. We can define a variable assignment to be
+simply a function from the natural numbers to elements of the carrier
+type, but it is more convenient to specify an assignment by giving a
+finite list of values for the initial variables and using a default
+value elsewhere.
+
+.. code:: lean
+
+   universe u
+
+   def var_assignment (α : Type u) := ℕ → α
+
+   def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+   λ n, match (list.nth l n) with
+   | some a := a
+   | none   := arbitrary α
+   end
+
+   section
+   variables (α : Type u) [inhabited α]
+   instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+   end
+
+The instance declaration at the end declares a
+``var_assignment_to_list`` to be coercion. We need to know that ``α`` is
+inhabited to be able to return a default value for variables whose
+indices are largere than the length of the list.
+
+We can interpret a numeral in any semiring. The following definition
+uses well-founded recursion to carry out the cast; we use the ``div``
+and ``mod`` functions to carry the translation efficiently. The two
+``have`` statements give facts that are needed to justify the
+well-founded recursion.
+
+.. code:: lean
+
+   universe u
+
+   namespace semiring
+   variables {α : Type u} [semiring α]
+
+   def of_nat : ℕ → α
+   | 0 := 0
+   | 1 := 1
+   | (n+2) :=
+     have n / 2 < n + 2,
+       begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                        apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+     have n % 2 < n + 2,
+       begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                        apply nat.succ_pos } end,
+     2 * of_nat (n / 2) + of_nat (n % 2)
+
+   end semiring
+
+We these in hand, the evaluation function for arithmetic expressions can
+now be defined using a straightforward recursion on syntax:
+
+.. code:: lean
+
+   universe u
+
+   inductive arith_expr
+   | var   : ℕ → arith_expr
+   | const : ℕ → arith_expr
+   | plus  : arith_expr → arith_expr → arith_expr
+   | times : arith_expr → arith_expr → arith_expr
+
+   open arith_expr
+
+   def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+
+   namespace arith_expr
+
+   def var_assignment (α : Type u) := ℕ → α
+
+   def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+   λ n, match (list.nth l n) with
+   | some a := a
+   | none   := arbitrary α
+   end
+
+   section
+   instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩
+
+   variables (α : Type u) [inhabited α]
+   instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+   end
+
+   namespace semiring
+   variables {α : Type u} [semiring α]
+
+   def of_nat : ℕ → α
+   | 0 := 0
+   | 1 := 1
+   | (n+2) :=
+     have n / 2 < n + 2,
+       begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                        apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+     have n % 2 < n + 2,
+       begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                        apply nat.succ_pos } end,
+     2 * of_nat (n / 2) + of_nat (n % 2)
+
+   end semiring
+
+   -- BEGIN
+   variables (α : Type u) [semiring α]
+
+   def arith_eval (v : var_assignment α) : arith_expr → α
+   | (var n)       := v n
+   | (const n)     := semiring.of_nat n
+   | (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
+   | (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
+   -- END
+
+   end arith_expr
+
+We can now try it out:
+
+.. code:: lean
+
+   universe u
+
+   inductive arith_expr
+   | var : ℕ → arith_expr
+   | const : ℕ → arith_expr
+   | plus : arith_expr → arith_expr → arith_expr
+   | times : arith_expr → arith_expr → arith_expr
+
+   open arith_expr
+
+   def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+
+   namespace arith_expr
+
+   def var_assignment (α : Type u) := ℕ → α
+
+   def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+   λ n, match (list.nth l n) with
+   | some a := a
+   | none   := arbitrary α
+   end
+
+   section
+   instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩
+
+   variables (α : Type u) [inhabited α]
+   instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+   end
+
+   namespace semiring
+   variables {α : Type u} [semiring α]
+
+   def of_nat : ℕ → α
+   | 0 := 0
+   | 1 := 1
+   | (n+2) :=
+     have n / 2 < n + 2,
+       begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                        apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+     have n % 2 < n + 2,
+       begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                        apply nat.succ_pos } end,
+     2 * of_nat (n / 2) + of_nat (n % 2)
+
+   end semiring
+
+   variables (α : Type u) [semiring α]
+
+   def arith_eval (v : var_assignment α) : arith_expr → α
+   | (var n)       := v n
+   | (const n)     := semiring.of_nat n
+   | (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
+   | (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
+
+
+   -- BEGIN
+   #eval arith_eval ℕ ↑[5, 7]        sample_expr
+   #eval arith_eval ℕ ↑[5, 7, 12]    sample_expr
+   #eval arith_eval ℕ ↑[5]           sample_expr
+
+   #check arith_eval ℤ ↑[(5 : ℤ), 7] sample_expr
+   -- END
+
+   end arith_expr
+
+In these examples, we help out the elaborator by indicating that we
+intend to coerce the list to a ``var_assignment``.

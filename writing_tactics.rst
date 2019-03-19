@@ -446,7 +446,7 @@ One can even manipulate data structures that include tactics themselves. For exa
    | (t::ts) := t <|> first ts
    -- END
 
-It fails if none of the tactics on the list succeeds. Consider the example from Introduction_:
+It fails if none of the tactics on the list succeeds. Consider the example from :numref:`Chapter %s <Introduction>`:
 
 .. code-block:: lean
 
