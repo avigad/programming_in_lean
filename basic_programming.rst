@@ -1,31 +1,21 @@
-.. _Programming_in_Lean:
+.. _Basic_Programming:
 
-Programming in Lean
-===================
+Basic Programming
+=================
 
-Lean aims to support both mathematical abstraction alongside pragmatic computation, allowing both to interact in a common foundational framework. Some users will be interested in viewing Lean as a programming language, and making sure that every assertion has direct computational meaning. Others will be interested in treating Lean as a system for reasoning about abstract mathematical objects and assertions, which may not have straightforward computational interpretations. Lean is designed to be a comfortable environment for both kinds of users.
-
-But Lean is also designed to support users who want to maintain both world views at once. This includes mathematical users who, having developed an abstract mathematical theory, would then like to start computing with the mathematical objects in a verified way. It also includes computer scientists and engineers who, having written a program or modeled a piece of hardware or software in Lean, would like to verify claims about it against a background mathematical theory of arithmetic, analysis, dynamical systems, or stochastic processes.
-
-Lean employs a number of carefully chosen devices to support a clean and principled unification of the two worlds. Chief among these is the inclusion of a type ``Prop`` of propositions, or assertions. If ``p`` is an element of type ``Prop``, you can think of an element ``t : p`` as representing evidence that ``p`` is true, or a proof of ``p``, or simply the fact that ``p`` holds. The element ``t``, however, does not bear any computational information. In contrast, if ``α`` is an element of ``Type u`` for any ``u`` greater than 0 and ``t : α``, then ``t`` contains data, and can be evaluated.
-
-We saw in :numref:`Section %s <Nonconstructive_Definitions>` that Lean allows us to define functions that produce data from a proposition ``∃ x, p x``, but that such functions are marked as ``noncomputable``, and do not generate bytecode-block. Expressions ``t : α``, where ``α`` is a type of data, can contain subexpressions that are elements of ``Prop``, and these can even refer to nonconstructive objects. During the extraction of bytecode-block, these elements are simply ignored, and do not contribute to the computational content of ``t``.
-
-For that reason, abstract elements in Lean's library can have *computational refinements*. For example, for every type, ``α``, there is another type, ``set α``, of sets of elements of ``α`` and some sets satisfy the property of being ``finite``. Saying that a set is finite is equivalent to saying that there exists a list that contains exactly the same elements. But this statement is a proposition, which means that it is impossible to extract such a list from the mere assertion that it exists. For that reason, the standard library also defines a type ``finset α``, which is better suited to computation. An element ``s : finset α`` is represented by a list of elements of ``α`` without duplicates. Using quotient types, we can arrange that lists that differ up to permutation are considered equal, and a defining principle of quotient types allows us to define a function on ``finset α`` in terms of any list that represents it, provided that we show that our definition is invariant under permutations of the list. Computationally, an element of ``finset α`` *is* just a list. Everything else is essentially a contract that we commit ourselves to obeying when working with elements of ``finset α``. The contract is important to reasoning about the results of our computations and their properties, but it plays no role in the computation itself.
-
-As another example of the interaction between propositions and data, consider the fact that we do not always have algorithms that determine whether a proposition is true (consider, for example, the proposition that a Turing machine halts). In many cases, however, we do. For example, assertions ``m = n`` and ``m < n`` about natural numbers, and Boolean combinations of these, can be evaluated. Propositions like this are said to be *decidable*. Lean's library uses class inference to infer the decidability, and when it succeeds, you can use a decidable property in an ``if`` … ``then`` … ``else`` conditional statement. Computationally, what is going on is that class inference finds the relevant procedure, and the bytecode-block evaluator uses it.
-
-One side effect of the choice of CIC as a foundation is that all functions we define, computational or not, are total. Once again, dependent type theory offers various mechanisms that we can use to restrict the range of applicability of a function, and some will be described below.
+This chapter introduces the basics of using Lean as a programming language. It is not a proper introduction to programming, however. There are a number of good introductions to functional programming, including `Learn You a Haskell for Great Good <https://leanprover.github.io/theorem_proving_in_lean/>`__. If functional programming is new to you, you might find it helpful to read another text and port the examples and exercises to Lean.
 
 Evaluating Expressions
 ----------------------
 
-When translating expressions to byte code-block, Lean's virtual machine evaluator ignores type information entirely. The whole elaborate typing schema of the CIC serves to ensure that terms make sense, and mean what we think they mean. Type checking is entirely static: when evaluating a term ``t`` of type ``α``, the bytecode-block evaluator ignores ``α``, and simply computes the value of ``t``, as described below. As noted above, any subexpressions of ``t`` whose type is an element of ``Prop`` are computationally irrelevant, and they are ignored too.
+When translating expressions to byte code, Lean's virtual machine evaluator ignores type information entirely. The whole elaborate typing schema of the CIC serves to ensure that terms make sense, and mean what we think they mean. Type checking is entirely static: when evaluating a term ``t`` of type ``α``, the bytecode evaluator ignores ``α``, and simply computes the value of ``t``, as described below. As noted above, any subexpressions of ``t`` whose type is an element of ``Prop`` are computationally irrelevant, and they are ignored too.
 
 The evaluation of expressions follows the computational rules of the CIC. In particular:
 
--  To evaluate a function application ``(λ x, s) t``, the bytecode-block evaluator evaluates ``t``, and then evaluates ``s`` with ``x`` instantiated to ``t``.
--  To evaluate an eliminator for an inductively defined type — in other words, a function defined by pattern matching or recursion — the bytecode-block evaluator waits until all the arguments are given, evaluates the first one, and, on the basis of the result, applies the relevant case or recursive call.
+-  To evaluate a function application ``(λ x, s) t``, the bytecode evaluator evaluates ``t``, and then evaluates ``s`` with ``x`` instantiated to ``t``.
+-  To evaluate an eliminator for an inductively defined type — in other words, a function defined by pattern matching or recursion — the bytecode evaluator waits until all the arguments are given, evaluates the first one, and, on the basis of the result, applies the relevant case or recursive call.
+
+The evaluation strategy for function application is known as *eager evaluation*: when applying a function ``f`` to as sequence of arguments ``t1`` ... ``tn``, the arguments are evaluated first, and then the body of the function is evaluated with the results.
 
 We have already seen that Lean can evaluate expressions involving natural numbers, integers, lists, and booleans.
 
@@ -184,19 +174,19 @@ We can define the sequence of Fibonacci numbers in a natural way:
    | 1     := 1
    | (n+2) := fib (n+1) + fib n
 
-   #eval fib 100
+   #eval fib 10
 
-The naive implementation runs the risk of an exponential run time, since the computation of ``fib (n+2)`` calls for two independent computations of ``fib n``, one hidden in the computation of ``fib (n+1)``. In fact, the current Lean compilation scheme avoids this, because it joins the recursive falls in a single tuple and evaluates them both at once. We can do this explictly, thereby avoiding reliance on the inner workings of Lean's function definition system, by defining an auxiliary function that computes the values in pairs:
+When evaluating ``fib``, the virtual machine uses the defining equations. As a result, this naive implementation runs in exponential time, since the computation of ``fib (n+2)`` calls for two independent computations of ``fib n``, one hidden in the computation of ``fib (n+1)``. The following more efficient version defines an auxiliary function that computes the values in pairs:
 
 .. code-block:: lean
 
    def fib_aux : ℕ → ℕ × ℕ
    | 0     := (0, 1)
-   | (n+1) := let p := fib_aux n in (p.2, p.1 + p.2)
+   | (n+1) := let p := fib_aux n in (p.snd, p.fst + p.snd)
 
-   def fib n := (fib_aux n).2
+   def fib n := (fib_aux n).snd
 
-   #eval fib 100
+   #eval fib 1000
 
 A similar solution is to use additional arguments to accumulate partial results:
 
@@ -208,7 +198,7 @@ A similar solution is to use additional arguments to accumulate partial results:
 
    def fib n := fib_aux n 0 1
 
-   #eval fib 100
+   #eval fib 1000
 
 Functions on lists are naturally defined by structural recursion. These definitions are taken from the standard library:
 
@@ -244,6 +234,8 @@ Functions on lists are naturally defined by structural recursion. These definiti
    -- END
    end hidden
 
+Notice that ``mem`` defines a predicate on lists, which is to say, ``mem a l`` asserts that ``a`` is a member of the list ``l``. To use it computationally, say, in an if-then-else clause, one needs to establish that this instance is decidable, or (what comes to essentially the same thing) define a version that takes values in type ``bool`` instead.
+
 Inhabited Types, Subtypes, and Option Types
 -------------------------------------------
 
@@ -277,7 +269,7 @@ Another possibility is to add a precondition to the function. We can do this bec
    | (a :: l₀) h := a
    -- END
 
-This contract ensures that ``first`` will never be called to evaluate the first element of an empty list. The check is entirely static; the evidence is ignored by the bytecode-block evaluator.
+This contract ensures that ``first`` will never be called to evaluate the first element of an empty list. The check is entirely static; the evidence is ignored by the bytecode evaluator.
 
 A closely related solution is to use a ``subtype``. This simply bundles together the data and the precondition.
 
@@ -330,3 +322,50 @@ You can think of the return value ``none`` as signifying that the function is un
    -- END
 
 To use an element ``oa`` of type ``option α``, one typically has to pattern match on the cases ``none`` and ``some α``. Doing this manually in the course of a computation can be tedious, but it is much more pleasant and natural using *monads*, which we turn to next.
+
+Input and Output
+----------------
+
+Lean can support programs that interact with the outside  world, querying users for input and presenting them with output during the course of a computation. Lean's foundational framework has no model of "the real world," but Lean declares ``get_str`` and ``put_str`` commands to get an input string from the user and write an input string to output, respectively. Within the foundational system, these are treated as black box operations. But when programs are evaluated by Lean's virtual machine or when they are translated to C++, they have the expected behavior. Here, for example, is a program that prints "hello world":
+
+.. code-block:: lean
+
+    import system.io
+    open io
+
+    def hello_world : io unit :=
+    put_str "hello world\n"
+
+    #eval hello_world
+
+The next example prints the first 100 squares:
+
+.. code-block:: lean
+
+   import system.io
+   open io
+
+   def print_squares : ℕ → io unit
+   | 0     := return ()
+   | (n+1) := print_squares n >>
+              put_str (to_string n ++ "^2 = " ++
+                to_string (n * n) ++ "\n")
+
+   #eval print_squares 100
+
+We will explain the data type ``io unit`` in :numref:`Chapter %s <Monads>`. Although this program has a real world side effect of sending output to the screen when run, that effect is invisible to the formal foundation. The ``print axioms`` command shows that the expressions ``hello_world`` and ``print_squares`` depend on constants that have been added to the axiomatic foundation to implement the io primitives.
+
+.. code-block:: lean
+
+   import system.io
+   open io
+
+   def hello_world : io unit :=
+   put_str "hello world\n"
+
+   -- BEGIN
+   #print axioms hello_world
+   -- END
+
+Within the logical foundation, these constants are entirely opaque, objects about which that the axiomatic system has nothing to say. In this way, we can prove properties of programs involving ``io`` that do not depend in any way on the particular results of the input and output.
+

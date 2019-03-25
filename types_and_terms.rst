@@ -1,20 +1,16 @@
-.. _Objects_and_Types:
+.. _Types_and_Terms:
 
-Objects and Types
-=================
+Types and Terms
+===============
 
-As a foundational framework, the Calculus of Inductive Constructions, or CIC, is flexible enough to define all kinds of mathematical objects. It can define the number systems, ranging from the natural numbers to the complex numbers; algebraic structures, from semigroups to categories and modules over an arbitrary ring; limits, derivatives, and integrals, and other components of real and complex analysis; vector spaces and matrices; measure spaces; and much more.
+Lean's foundational framework is a version of a logical system known as the *Calculus of Inductive Constructions*, or *CIC*. Programming in Lean amounts to writing down expressions in the system, and then evaluating them. You should keep in mind that, as a full-blown foundation for mathematics, the CIC is much more than a programming language. One can define all kinds of mathematical objects: number systems, ranging from the natural numbers to the complex numbers; algebraic structures, from semigroups to categories and modules over an arbitrary ring; limits, derivatives, and integrals, and other components of real and complex analysis; vector spaces and matrices; measure spaces; and much more. This provides an environment in which one can define data types alongside other mathematical objects, and write programs alongside mathematical proofs.
 
-This flexibility is not so mysterious. Common set-theoretic constructions are mirrored in dependent type theory, so type-theoretic definitions of many mathematical objects are not so different from their set-theoretic counterparts. As the name suggests, the notion of an inductively defined type is central to the CIC, and forms the basis for a number of fundamental constructions.
-
-There are important differences between set theory and type theory, however. In axiomatic set theory, there is only fundamentally one type of object, in that every object is a set. In type theory, a natural number, a function from the reals to the reals, and a vector space are all different types of objects, and it doesn't even make sense to ask whether an object of one type is equal to an object of another. Similarly, it does not make sense to apply a vector operation to a natural number, without (implicitly or explicitly) coercing the natural number to a vector in some way. Giving up the free-wheeling flexibility of set theory has some disadvantages, but it has a number of advantages, too. It makes it possible to communicate more efficiently, since a good deal of information can be inferred from an understanding of the types of objects involved. A typing discipline also makes it possible for a system like Lean to detect and flag errors, such as sending the wrong sorts of arguments to a function.
-
-Other differences between set-theoretic foundations and the type theoretic foundation implemented by Lean stem from the fact that computation is a central part of the latter. We will see below that in Lean one can define noncomputable functions and operations, as is common in everyday mathematics. But Lean tracks the use of such classical constructions, and any definition in Lean that is not explicitly tagged as noncomputable generates executable code-block. Below, we will illustrate this, by evaluating computable objects as we go. We will discuss computation in greater detail in the next chapter.
+Terms in the Calculus of Inductive Constructions are therefore used to represent mathematical objects, programs, data types, assertions, and proofs. In the CIC, every term has a *type*, which indicates what sort of object it and how it behaves computationally. This chapter is a quick tour of some of the terms we can write in Lean. For a more detailed and exhaustive account, see `Theorem Proving in Lean <https://leanprover.github.io/theorem_proving_in_lean/>`__.
 
 Some Basic Types
 ----------------
 
-Remember that, in Lean:
+In Lean:
 
 -  ``#check`` can be used a check the type of an expression.
 -  ``#print`` can be used to print information about an identifier, for example, the definition of a defined constant.
@@ -52,7 +48,7 @@ The library includes standard operations on these types:
    #check tt && (ff || tt)
    #eval tt && (ff || tt)
 
-Remember that, by default, a numeral denotes a natural number. You can always specify an intended type ``t`` for an expression ``e`` by writing ``(e : t)``. In that case, Lean does its best to interpret the expression as an object of the given type, and raises an error if it does not succeed.
+By default, a numeral denotes a natural number. You can always specify an intended type ``t`` for an expression ``e`` by writing ``(e : t)``. In that case, Lean does its best to interpret the expression as an object of the given type, and raises an error if it does not succeed.
 
 .. code-block:: lean
 
@@ -359,9 +355,9 @@ Lean provides an additional means of forming new types:
 
 -  quotient types
 
-We discussed pi types in the last section. Quotient types provide a means of defining a new type given a type and an equivalence relation on that type. They are used in the standard library to define, for example, the rational numbers, and a computational representation of finite sets (as lists, without duplicates, up to permutation).
+We discussed pi types in the last section. Quotient types provide a means of defining a new type given a type and an equivalence relation on that type. They are used in the standard library to define multisets, which are represented as lists that are considered the same when one is a permutation of another.
 
-Inductive types are suprisingly useful. The natural numbers are defined inductively:
+Inductive types are surprisingly useful. The natural numbers are defined inductively:
 
 .. code-block:: lean
 
@@ -478,7 +474,7 @@ When computer scientists bundle data together, they tend to call the result a *r
    structure color : Type :=
    mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
 
-Here, ``mk`` is the constructor (if ommitted, Lean assumes it is ``mk`` by default), and ``red``, ``green``, ``blue``, and ``name`` project the four values that are used to construct an element of ``color``.
+Here, ``mk`` is the constructor (if omitted, Lean assumes it is ``mk`` by default), and ``red``, ``green``, ``blue``, and ``name`` project the four values that are used to construct an element of ``color``.
 
 .. code-block:: lean
 
@@ -633,10 +629,16 @@ Because ``monoid`` is an instance of ``has_mul``, we can then use the generic sq
    #check square a * square b
    -- END
 
-.. _Nonconstructive_Definitions:
+.. _Mathematics_and_Computation:
 
-Nonconstructive Definitions
+Mathematics and Computation
 ---------------------------
+
+Lean aims to support both mathematical abstraction alongside pragmatic computation, allowing both to interact in a common foundational framework. Some users will be interested in viewing Lean as a programming language, and making sure that every assertion has direct computational meaning. Others will be interested in treating Lean as a system for reasoning about abstract mathematical objects and assertions, which may not have straightforward computational interpretations. Lean is designed to be a comfortable environment for both kinds of users.
+
+But Lean is also designed to support users who want to maintain both world views at once. This includes mathematical users who, having developed an abstract mathematical theory, would then like to start computing with the mathematical objects in a verified way. It also includes computer scientists and engineers who, having written a program or modeled a piece of hardware or software in Lean, would like to verify claims about it against a background mathematical theory of arithmetic, analysis, dynamical systems, or stochastic processes.
+
+Lean employs a number of carefully chosen devices to support a clean and principled unification of the two worlds. Chief among these is the inclusion of a type ``Prop`` of propositions, or assertions. If ``p`` is an element of type ``Prop``, you can think of an element ``t : p`` as representing evidence that ``p`` is true, or a proof of ``p``, or simply the fact that ``p`` holds. The element ``t``, however, does not bear any computational information. In contrast, if ``α`` is an element of ``Type u`` for any ``u`` greater than 0 and ``t : α``, then ``t`` contains data, and can be evaluated.
 
 Lean allows us to to define nonconstructive functions using familiar classical principles, provided we mark the associated definitions as ``noncomputable``.
 
@@ -653,33 +655,15 @@ Lean allows us to to define nonconstructive functions using familiar classical p
 
 In this example, declaring the type class instance ``prop_decidable`` allows us to use a classical definition by cases, depending on whether an arbitrary proposition is true or false. Given an arbitrary predicate ``p`` on the natural numbers, ``choose p`` returns an ``n`` satisfying ``p n`` if there is one, and ``0`` otherwise. For example, ``p n`` may assert that ``n`` code-blocks a halting computation sequence for some Turing machine, on a given input. In that case, ``choose p`` magically decides whether or not such a computation exists, and returns one if it doesn't. The second definition makes a best effort to define an inverse to a function ``f`` from the natural numbers to the natural numbers, mapping each ``n`` to some ``m`` such that ``f m = n``, and zero otherwise.
 
-The two previous definitions make use of the ``some`` function, which in turn depends on a construct known as *Hilbert's epsilon*. The next two definitions have essentially the same effect, although they do not specify the default value in case the given condition fails:
+Lean cannot (and does not even try) to generate bytecode for noncomputable functions. But expressions ``t : α``, where ``α`` is a type of data, can contain subexpressions that are elements of ``Prop``, and these can refer to nonconstructive objects. During the extraction of bytecode, these elements are simply ignored, and do not contribute to the computational content of ``t``.
 
-.. code-block:: lean
+For that reason, abstract elements in Lean's library can have *computational refinements*. For example, for every type, ``α``, there is another type, ``set α``, of sets of elements of ``α`` and some sets satisfy the property of being ``finite``. Saying that a set is finite is equivalent to saying that there exists a list that contains exactly the same elements. But this statement is a proposition, which means that it is impossible to extract such a list from the mere assertion that it exists. For that reason, the standard library also defines a type ``finset α``, which is better suited to computation. An element ``s : finset α`` is represented by a list of elements of ``α`` without duplicates. Using quotient types, we can arrange that lists that differ up to permutation are considered equal, and a defining principle of quotient types allows us to define a function on ``finset α`` in terms of any list that represents it, provided that we show that our definition is invariant under permutations of the list. Computationally, an element of ``finset α`` *is* just a list. Everything else is essentially a contract that we commit ourselves to obeying when working with elements of ``finset α``. The contract is important to reasoning about the results of our computations and their properties, but it plays no role in the computation itself.
 
-   open classical
-   local attribute [instance] prop_decidable
+As another example of the interaction between propositions and data, consider the fact that we do not always have algorithms that determine whether a proposition is true (consider, for example, the proposition that a Turing machine halts). In many cases, however, we do. For example, assertions ``m = n`` and ``m < n`` about natural numbers, and Boolean combinations of these, can be evaluated. Propositions like this are said to be *decidable*. Lean's library uses class inference to infer the decidability, and when it succeeds, you can use a decidable property in an ``if`` … ``then`` … ``else`` conditional statement. Computationally, what is going on is that class inference finds the relevant procedure, and the bytecode evaluator uses it.
 
-   noncomputable def choose (p : ℕ → Prop) : ℕ :=
-   epsilon p
+One side effect of the choice of CIC as a foundation is that all functions we define, computational or not, are total. Once again, dependent type theory offers various mechanisms that we can use to restrict the range of applicability of a function, and some will be described later on.
 
-   noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
-   epsilon (λ m, f m = n)
 
-These definitions rely on the fact that Lean can infer (again using type class inference) that the natural numbers are nonempty. The ``epsilon`` operator is, in turn, defined from an even more fundamental choice principle, which is the source of all nonconstructive definitions in the standard library. The dependence is made manifest by the ``#print axioms`` command.
 
-.. code-block:: lean
 
-   open classical
-   local attribute [instance] prop_decidable
 
-   noncomputable def choose (p : ℕ → Prop) : ℕ :=
-   epsilon p
-
-   noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
-   epsilon (λ m, f m = n)
-
-   -- BEGIN
-   #print axioms choose
-   #print axioms inverse
-   -- END
