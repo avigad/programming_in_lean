@@ -169,7 +169,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'programming_in_lean.tex', u'Programming in Lean',
-     u'Jeremy Avigad, Leonardo de Moura, and Simon Hudon', 'manual'),
+     u'Jeremy Avigad and Simon Hudon', 'manual'),
 ]
 
 
