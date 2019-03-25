@@ -83,14 +83,14 @@ Strings can be mapped to lists of characters and back, so operations on lists an
    namespace string
 
    def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
-   ((s.to_list).filter p).to_string
+   ((s.to_list).filter p).as_string
 
    def map (f : char → char) (l : string) : string :=
-   (l.to_list.map f).to_string
+   (l.to_list.map f).as_string
 
    def to_lower (s : string) : string := s.map char.to_lower
 
-   def reverse (s : string) : string := s.to_list.reverse.to_string
+   def reverse (s : string) : string := s.to_list.reverse.as_string
 
    def remove_punctuation (s : string) : string :=
    s.filter (λ c, ¬ char.is_punctuation c)
@@ -104,14 +104,14 @@ We can use these to write a procedure that tests to see whether a given sentence
    namespace string
 
    def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
-   ((s.to_list).filter p).to_string
+   ((s.to_list).filter p).as_string
 
    def map (f : char → char) (l : string) : string :=
-   (l.to_list.map f).to_string
+   (l.to_list.map f).as_string
 
    def to_lower (s : string) : string := s.map char.to_lower
 
-   def reverse (s : string) : string := s.to_list.reverse.to_string
+   def reverse (s : string) : string := s.to_list.reverse.as_string
 
    def remove_punctuation (s : string) : string :=
    s.filter (λ c, ¬ char.is_punctuation c)
@@ -368,4 +368,3 @@ We will explain the data type ``io unit`` in :numref:`Chapter %s <Monads>`. Alth
    -- END
 
 Within the logical foundation, these constants are entirely opaque, objects about which that the axiomatic system has nothing to say. In this way, we can prove properties of programs involving ``io`` that do not depend in any way on the particular results of the input and output.
-
