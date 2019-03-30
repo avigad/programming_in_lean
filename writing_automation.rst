@@ -117,14 +117,14 @@ We can now use Lean's built-in simplifier to do the normalization:
    end logical_equivalences
 
    -- BEGIN
-   meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-   do try (simp_at hyp lemmas)
+   meta def normalize_hyp (lemmas : simp_lemmas) (hyp : expr) : tactic unit :=
+   do try (simp_hyp lemmas [] hyp)
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+      lemmas ← (monad.mapm mk_const [``iff_iff_implies_and_implies,
             ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
-            ``not_true_iff, ``not_false_iff],
+            ``not_true_iff, ``not_false_iff] >>= simp_lemmas.mk.append),
       monad.mapm' (normalize_hyp lemmas) hyps
    -- END
 
@@ -170,14 +170,14 @@ We can test the result:
      iff.intro not_and_not_of_not_or not_or_of_not_and_not
    end logical_equivalences
 
-   meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-   do try (simp_at hyp lemmas)
+   meta def normalize_hyp (lemmas : simp_lemmas) (hyp : expr) : tactic unit :=
+   do try (simp_hyp lemmas [] hyp)
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+      lemmas ← (monad.mapm mk_const [``iff_iff_implies_and_implies,
             ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
-            ``not_true_iff, ``not_false_iff],
+            ``not_true_iff, ``not_false_iff] >>= simp_lemmas.mk.append),
       monad.mapm' (normalize_hyp lemmas) hyps
 
    -- BEGIN
@@ -301,15 +301,15 @@ Our propositional prover can now be implemented as follows:
      iff.intro not_and_not_of_not_or not_or_of_not_and_not
    end logical_equivalences
 
-   meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-   do try (simp_at hyp lemmas)
+   meta def normalize_hyp (lemmas : simp_lemmas) (hyp : expr) : tactic unit :=
+   do try (simp_hyp lemmas [] hyp)
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+      lemmas ← (monad.mapm mk_const [``iff_iff_implies_and_implies,
             ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
-            ``not_true_iff, ``not_false_iff],
-      monad.mapm' hyps (normalize_hyp lemmas)
+            ``not_true_iff, ``not_false_iff] >>= simp_lemmas.mk.append),
+      monad.mapm' (normalize_hyp lemmas) hyps
 
    meta def add_fact (prf : expr) : tactic unit :=
    do nh ← get_unused_name `h none,
@@ -419,14 +419,14 @@ All this is left for us to do is to try it out:
      iff.intro not_and_not_of_not_or not_or_of_not_and_not
    end logical_equivalences
 
-   meta def normalize_hyp (lemmas : list expr) (hyp : expr) : tactic unit :=
-   do try (simp_at hyp lemmas)
+   meta def normalize_hyp (lemmas : simp_lemmas) (hyp : expr) : tactic unit :=
+   do try (simp_hyp lemmas [] hyp)
 
    meta def normalize_hyps : tactic unit :=
    do hyps ← local_context,
-      lemmas ← monad.mapm mk_const [``iff_iff_implies_and_implies,
+      lemmas ← (monad.mapm mk_const [``iff_iff_implies_and_implies,
             ``implies_iff_not_or, ``not_and_iff, ``not_or_iff, ``not_not_iff,
-            ``not_true_iff, ``not_false_iff],
+            ``not_true_iff, ``not_false_iff] >>= simp_lemmas.mk.append),
       monad.mapm' (normalize_hyp lemmas) hyps
 
    meta def add_fact (prf : expr) : tactic unit :=
