@@ -212,13 +212,13 @@ Instead of using a lambda, you can abstract variables by putting them before the
 .. code-block:: lean
 
    def foo (x y : ℕ) : ℕ := x + y + 3
-   def bar x y := x + y + 3
+   def bar (x y) := x + y + 3
 
 You can even test a definition without adding it to the environment, using the ``example`` command:
 
 .. code-block:: lean
 
-   example x y := x + y + 3
+   example (x y) := x + y + 3
 
 When variables have been declared, functions implicitly depend on the variables mentioned in the definition:
 
@@ -229,7 +229,7 @@ When variables have been declared, functions implicitly depend on the variables 
 
    def foo := x
    def bar := m + n + 3
-   def baz k := m + k + 3
+   def baz (k) := m + k + 3
 
    #check foo
    #check bar
@@ -662,8 +662,3 @@ For that reason, abstract elements in Lean's library can have *computational ref
 As another example of the interaction between propositions and data, consider the fact that we do not always have algorithms that determine whether a proposition is true (consider, for example, the proposition that a Turing machine halts). In many cases, however, we do. For example, assertions ``m = n`` and ``m < n`` about natural numbers, and Boolean combinations of these, can be evaluated. Propositions like this are said to be *decidable*. Lean's library uses class inference to infer the decidability, and when it succeeds, you can use a decidable property in an ``if`` … ``then`` … ``else`` conditional statement. Computationally, what is going on is that class inference finds the relevant procedure, and the bytecode evaluator uses it.
 
 One side effect of the choice of CIC as a foundation is that all functions we define, computational or not, are total. Once again, dependent type theory offers various mechanisms that we can use to restrict the range of applicability of a function, and some will be described later on.
-
-
-
-
-

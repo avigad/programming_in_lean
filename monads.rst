@@ -372,15 +372,12 @@ We can finally explain how Lean handles input and output: the constant ``io`` is
    #check (@put_str : string → io unit)
    #check (@get_line : io string)
 
-Here ``io.interface`` is a type class packing information needed to interpret the input output interface. Users can instantiate that type class in different ways, but they can also leave these variables uninstantiated in calls to Lean's virtual machine, which then substitutes the usual terminal io operations.
-
 The expression ``put_str s`` changes the ``io`` state by writing ``s`` to output; the return type, ``unit``, indicates that no meaningful value is returned. The expression ``put_nat n`` does the analogous thing for a natural number, ``n``. The expression ``get_line``, in contrast; however you want to think of the change in ``io`` state, a ``string`` value is returned inside the monad. When we use the native virtual machine interpretation, thinking of the ``io`` monad as representing a state is somewhat heuristic, since within the Lean language, there is nothing that we can say about it. But when we run a Lean program, the interpreter does the right thing whenever it encounters the bind and return operations for the monad, as well as the constants above. In particular, in the example below, it ensures that the argument to ``put_nat`` is evaluated before the output is sent to the user, and that the expressions are printed in the right order.
 
 .. code-block:: lean
 
    import system.io
    open io
-   variable [io.interface]
 
    -- BEGIN
    #eval put_str "hello " >> put_str "world!" >> put_str (to_string (27 * 39))
@@ -396,41 +393,22 @@ In addition to the monad type class, Lean defines all the following abstract typ
 
 .. code-block:: lean
 
-   open monad
-   namespace hidden
-   -- BEGIN
+   open monad function
    universe variables u v
+
+   namespace hidden
 
    class functor (f : Type u → Type v) : Type (max (u+1) v) :=
    (map : Π {α β : Type u}, (α → β) → f α → f β)
    (map_const : Π {α β : Type u}, α → f β → f α := λ α β, map ∘ const β)
 
-   infixr ` <$> `:100 := functor.map
-   infixr ` <$ `:100  := functor.map_const
+   local infixr ` <$> `:100 := functor.map
 
-   @[reducible] def functor.map_const_rev {f : Type u → Type v} [functor f] {α β : Type u} : f β → α → f α :=
-   λ a b, b <$ a
-   infixr ` $> `:100  := functor.map_const_rev
+   end hidden
 
-   class has_pure (f : Type u → Type v) :=
-   (pure {} {α : Type u} : α → f α)
-
-   export has_pure (pure)
-
-   class has_seq (f : Type u → Type v) : Type (max (u+1) v) :=
-   (seq  : Π {α β : Type u}, f (α → β) → f α → f β)
+   namespace hidden'
 
    infixl ` <*> `:60 := has_seq.seq
-
-   class has_seq_left (f : Type u → Type v) : Type (max (u+1) v) :=
-   (seq_left : Π {α β : Type u}, f α → f β → f α)
-
-   infixl ` <* `:60  := has_seq_left.seq_left
-
-   class has_seq_right (f : Type u → Type v) : Type (max (u+1) v) :=
-   (seq_right : Π {α β : Type u}, f α → f β → f β)
-
-   infixl ` *> `:60  := has_seq_right.seq_right
 
    class applicative (f : Type u → Type v) extends functor f, has_pure f, has_seq f, has_seq_left f, has_seq_right f :=
    (map       := λ _ _ x y, pure x <*> y)
@@ -442,32 +420,6 @@ In addition to the monad type class, Lean defines all the following abstract typ
 
    infixr ` <|> `:2 := has_orelse.orelse
 
-   class alternative (f : Type u → Type v) extends applicative f, has_orelse f : Type (max (u+1) v) :=
-   (failure : Π {α : Type u}, f α)
-
-   section
-   variables {f : Type u → Type v} [alternative f] {α : Type u}
-
-   @[inline] def failure : f α :=
-   alternative.failure f
-
-   @[inline] def guard {f : Type → Type v} [alternative f] (p : Prop) [decidable p] : f unit :=
-   if p then pure () else failure
-
-   @[inline] def assert {f : Type → Type v} [alternative f] (p : Prop) [decidable p] : f (inhabited p) :=
-   if h : p then pure ⟨h⟩ else failure
-
-   /- Later we define a coercion from bool to Prop, but this version will still be useful.
-      Given (t : tactic bool), we can write t >>= guardb -/
-   @[inline] def guardb {f : Type → Type v} [alternative f] : bool → f unit
-   | tt := pure ()
-   | ff := failure
-
-   @[inline] def optional (x : f α) : f (option α) :=
-   some <$> x <|> pure none
-
-   end
-   -- END
-   end hidden
+   end hidden'
 
 The ``monad`` class extends both ``functor`` and ``applicative``, so both of these can be seen as even more abstract versions of ``monad``. On the other hand, not every ``monad`` is ``alternative``, and in the next chapter we will see an important example of one that is. One way to think about an alternative monad is to think of it as representing computations that can possibly fail, and, moreover, Intuitively, an alternative monad can be thought of supporting definitions that say "try ``a`` first, and if that doesn't work, try ``b``." A good example is the ``option`` monad, in which we can think of an element ``none`` as a computation that has failed. If ``a`` and ``b`` are elements of ``option α`` for some type ``α``, we can define ``a <|> b`` to have the value ``a`` if ``a`` is of the form ``some a₀``, and ``b`` otherwise.

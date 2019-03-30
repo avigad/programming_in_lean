@@ -184,7 +184,7 @@ When evaluating ``fib``, the virtual machine uses the defining equations. As a r
    | 0     := (0, 1)
    | (n+1) := let p := fib_aux n in (p.snd, p.fst + p.snd)
 
-   def fib n := (fib_aux n).snd
+   def fib (n) := (fib_aux n).snd
 
    #eval fib 1000
 
@@ -196,7 +196,7 @@ A similar solution is to use additional arguments to accumulate partial results:
    | 0     a b := b
    | (n+1) a b := fib_aux n b (a+b)
 
-   def fib n := fib_aux n 0 1
+   def fib (n) := fib_aux n 0 1
 
    #eval fib 1000
 
