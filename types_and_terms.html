@@ -1,0 +1,645 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ascii" />
+    <title>2. Types and Terms &#8212; Programming in Lean 3.4.2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3. Basic Programming" href="basic_programming.html" />
+    <link rel="prev" title="1. Introduction" href="introduction.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="types-and-terms">
+<span id="id1"></span><h1>2. Types and Terms<a class="headerlink" href="#types-and-terms" title="Permalink to this headline">&#182;</a></h1>
+<p>Lean&#8217;s foundational framework is a version of a logical system known as the <em>Calculus of Inductive Constructions</em>, or <em>CIC</em>. Programming in Lean amounts to writing down expressions in the system, and then evaluating them. You should keep in mind that, as a full-blown foundation for mathematics, the CIC is much more than a programming language. One can define all kinds of mathematical objects: number systems, ranging from the natural numbers to the complex numbers; algebraic structures, from semigroups to categories and modules over an arbitrary ring; limits, derivatives, and integrals, and other components of real and complex analysis; vector spaces and matrices; measure spaces; and much more. This provides an environment in which one can define data types alongside other mathematical objects, and write programs alongside mathematical proofs.</p>
+<p>Terms in the Calculus of Inductive Constructions are therefore used to represent mathematical objects, programs, data types, assertions, and proofs. In the CIC, every term has a <em>type</em>, which indicates what sort of object it and how it behaves computationally. This chapter is a quick tour of some of the terms we can write in Lean. For a more detailed and exhaustive account, see <a class="reference external" href="https://leanprover.github.io/theorem_proving_in_lean/">Theorem Proving in Lean</a>.</p>
+<div class="section" id="some-basic-types">
+<h2>2.1. Some Basic Types<a class="headerlink" href="#some-basic-types" title="Permalink to this headline">&#182;</a></h2>
+<p>In Lean:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">#check</span></code> can be used a check the type of an expression.</li>
+<li><code class="docutils literal notranslate"><span class="pre">#print</span></code> can be used to print information about an identifier, for example, the definition of a defined constant.</li>
+<li><code class="docutils literal notranslate"><span class="pre">#reduce</span></code> can be used to normalize a symbolic expression.</li>
+<li><code class="docutils literal notranslate"><span class="pre">#eval</span></code> can be used to run the bytecode-block evaluator on any closed term that has a computational interpretation.</li>
+</ul>
+<p>Lean&#8217;s standard library defines a number of data types, such as <code class="docutils literal notranslate"><span class="pre">nat</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, and <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20nat%0A#print%20nat%0A%0A#check%20int%0A#print%20int%0A%0A#check%20list%0A#print%20list%0A%0A#check%20bool%0A#print%20bool" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="n">nat</span>
+<span class="k">#print</span> <span class="n">nat</span>
+
+<span class="k">#check</span> <span class="n">int</span>
+<span class="k">#print</span> <span class="n">int</span>
+
+<span class="k">#check</span> <span class="n">list</span>
+<span class="k">#print</span> <span class="n">list</span>
+
+<span class="k">#check</span> <span class="n">bool</span>
+<span class="k">#print</span> <span class="n">bool</span>
+</pre></div>
+</div>
+</div><p>You can use the unicode-block symbols <code class="docutils literal notranslate"><span class="pre">&#8469;</span></code> and <code class="docutils literal notranslate"><span class="pre">&#8484;</span></code> for nat and int, respectively. The first can be entered with <code class="docutils literal notranslate"><span class="pre">\N</span></code> or <code class="docutils literal notranslate"><span class="pre">\nat</span></code>, and the second can be entered with <code class="docutils literal notranslate"><span class="pre">\Z</span></code> or <code class="docutils literal notranslate"><span class="pre">\int</span></code>.</p>
+<p>The library includes standard operations on these types:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%203%20+%206%20*%209%0A#eval%203%20+%206%20*%209%0A%0A#check%201%20::%202%20::%203%20::%20%5B4,%205%5D%20++%20%5B6,%207,%208%5D%0A#eval%201%20::%202%20::%203%20::%20%5B4,%205%5D%20++%20%5B6,%207,%208%5D%0A%0A#check%20tt%20&amp;&amp;%20(ff%20%7C%7C%20tt)%0A#eval%20tt%20&amp;&amp;%20(ff%20%7C%7C%20tt)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="mi">3</span> <span class="bp">+</span> <span class="mi">6</span> <span class="bp">*</span> <span class="mi">9</span>
+<span class="k">#eval</span> <span class="mi">3</span> <span class="bp">+</span> <span class="mi">6</span> <span class="bp">*</span> <span class="mi">9</span>
+
+<span class="k">#check</span> <span class="mi">1</span> <span class="o">::</span> <span class="mi">2</span> <span class="o">::</span> <span class="mi">3</span> <span class="o">::</span> <span class="o">[</span><span class="mi">4</span><span class="o">,</span> <span class="mi">5</span><span class="o">]</span> <span class="bp">++</span> <span class="o">[</span><span class="mi">6</span><span class="o">,</span> <span class="mi">7</span><span class="o">,</span> <span class="mi">8</span><span class="o">]</span>
+<span class="k">#eval</span> <span class="mi">1</span> <span class="o">::</span> <span class="mi">2</span> <span class="o">::</span> <span class="mi">3</span> <span class="o">::</span> <span class="o">[</span><span class="mi">4</span><span class="o">,</span> <span class="mi">5</span><span class="o">]</span> <span class="bp">++</span> <span class="o">[</span><span class="mi">6</span><span class="o">,</span> <span class="mi">7</span><span class="o">,</span> <span class="mi">8</span><span class="o">]</span>
+
+<span class="k">#check</span> <span class="n">tt</span> <span class="bp">&amp;&amp;</span> <span class="o">(</span><span class="n">ff</span> <span class="bp">||</span> <span class="n">tt</span><span class="o">)</span>
+<span class="k">#eval</span> <span class="n">tt</span> <span class="bp">&amp;&amp;</span> <span class="o">(</span><span class="n">ff</span> <span class="bp">||</span> <span class="n">tt</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>By default, a numeral denotes a natural number. You can always specify an intended type <code class="docutils literal notranslate"><span class="pre">t</span></code> for an expression <code class="docutils literal notranslate"><span class="pre">e</span></code> by writing <code class="docutils literal notranslate"><span class="pre">(e</span> <span class="pre">:</span> <span class="pre">t)</span></code>. In that case, Lean does its best to interpret the expression as an object of the given type, and raises an error if it does not succeed.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20(3%20:%20%E2%84%A4)%0A#check%20(3%20:%20%E2%84%A4)%20+%206%20*%209%0A#check%20(3%20+%206%20*%209%20:%20%E2%84%A4)%0A%0A#eval%20(3%20+%206%20*%209%20:%20%E2%84%A4)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="o">(</span><span class="mi">3</span> <span class="o">:</span> <span class="n">&#8484;</span><span class="o">)</span>
+<span class="k">#check</span> <span class="o">(</span><span class="mi">3</span> <span class="o">:</span> <span class="n">&#8484;</span><span class="o">)</span> <span class="bp">+</span> <span class="mi">6</span> <span class="bp">*</span> <span class="mi">9</span>
+<span class="k">#check</span> <span class="o">(</span><span class="mi">3</span> <span class="bp">+</span> <span class="mi">6</span> <span class="bp">*</span> <span class="mi">9</span> <span class="o">:</span> <span class="n">&#8484;</span><span class="o">)</span>
+
+<span class="k">#eval</span> <span class="o">(</span><span class="mi">3</span> <span class="bp">+</span> <span class="mi">6</span> <span class="bp">*</span> <span class="mi">9</span> <span class="o">:</span> <span class="n">&#8484;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>We can also declare variables ranging over elements and types.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20m%20n%20k%20:%20%E2%84%95%0Avariables%20u%20v%20w%20:%20%E2%84%A4%0Avariable%20%20%CE%B1%20:%20Type%0Avariables%20l%E2%82%81%20l%E2%82%82%20:%20list%20%E2%84%95%0Avariables%20s%E2%82%81%20s%E2%82%82%20:%20list%20%CE%B1%0Avariable%20%20a%20:%20%CE%B1%0A%0A#check%20m%20+%20n%20*%20k%0A#check%20u%20+%20v%20*%20w%0A#check%20m%20::%20l%E2%82%81%20++%20l%E2%82%82%0A#check%20s%E2%82%81%20++%20a%20::%20s%E2%82%82" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="n">m</span> <span class="n">n</span> <span class="n">k</span> <span class="o">:</span> <span class="n">&#8469;</span>
+<span class="kd">variables</span> <span class="n">u</span> <span class="n">v</span> <span class="n">w</span> <span class="o">:</span> <span class="n">&#8484;</span>
+<span class="kd">variable</span>  <span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="kd">variables</span> <span class="n">l&#8321;</span> <span class="n">l&#8322;</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#8469;</span>
+<span class="kd">variables</span> <span class="n">s&#8321;</span> <span class="n">s&#8322;</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span>
+<span class="kd">variable</span>  <span class="n">a</span> <span class="o">:</span> <span class="n">&#945;</span>
+
+<span class="k">#check</span> <span class="n">m</span> <span class="bp">+</span> <span class="n">n</span> <span class="bp">*</span> <span class="n">k</span>
+<span class="k">#check</span> <span class="n">u</span> <span class="bp">+</span> <span class="n">v</span> <span class="bp">*</span> <span class="n">w</span>
+<span class="k">#check</span> <span class="n">m</span> <span class="o">::</span> <span class="n">l&#8321;</span> <span class="bp">++</span> <span class="n">l&#8322;</span>
+<span class="k">#check</span> <span class="n">s&#8321;</span> <span class="bp">++</span> <span class="n">a</span> <span class="o">::</span> <span class="n">s&#8322;</span>
+</pre></div>
+</div>
+</div><p>The standard library adopts the convention of using the Greek letters <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, <code class="docutils literal notranslate"><span class="pre">&#946;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&#947;</span></code> to range over types. You can type these with <code class="docutils literal notranslate"><span class="pre">\a</span></code>, <code class="docutils literal notranslate"><span class="pre">\b</span></code>, and <code class="docutils literal notranslate"><span class="pre">\g</span></code>, respectively. You can type subscripts with <code class="docutils literal notranslate"><span class="pre">\0</span></code>, <code class="docutils literal notranslate"><span class="pre">\1</span></code>, <code class="docutils literal notranslate"><span class="pre">\2</span></code>, and so on.</p>
+<p>Lean will insert coercions automatically:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20m%20n%20k%20:%20%E2%84%95%0Avariables%20u%20v%20w%20:%20%E2%84%A4%0A%0A--%20BEGIN%0A#check%20v%20+%20m%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="n">v</span> <span class="bp">+</span> <span class="n">m</span>
+</pre></div>
+</div>
+</div><p>The presence of a coercion is indicated by Lean&#8217;s output, <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">+</span> <span class="pre">&#8593;m</span> <span class="pre">:</span> <span class="pre">&#8484;</span></code>. Since Lean infers types sequentially as it processes an expression, you need to indicate the coercion manually if you write the arguments in the other order:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20m%20n%20k%20:%20%E2%84%95%0Avariables%20u%20v%20w%20:%20%E2%84%A4%0A%0A--%20BEGIN%0A#check%20%E2%86%91m%20+%20v%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="bp">&#8593;</span><span class="n">m</span> <span class="bp">+</span> <span class="n">v</span>
+</pre></div>
+</div>
+</div><p>You can type the up arrow by writing <code class="docutils literal notranslate"><span class="pre">\u</span></code>. This is notation for a generic coercion function, and Lean finds the appropriate one using type classes, as described below. The notations <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">++</span></code> similarly denote functions defined generically on any type that supports the relevant operations:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20&#64;has_add.add%0A#print%20has_add.add%0A%0A#check%20&#64;has_mul.mul%0A#print%20has_mul.mul%0A%0A#check%20&#64;append%0A#print%20append" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="bp">@</span><span class="n">has_add.add</span>
+<span class="k">#print</span> <span class="n">has_add.add</span>
+
+<span class="k">#check</span> <span class="bp">@</span><span class="n">has_mul.mul</span>
+<span class="k">#print</span> <span class="n">has_mul.mul</span>
+
+<span class="k">#check</span> <span class="bp">@</span><span class="n">append</span>
+<span class="k">#print</span> <span class="n">append</span>
+</pre></div>
+</div>
+</div><p>Here, the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> symbol before the name of the function indicates that Lean should display arguments that are usually left implicit. These are called, unsurprisingly, <em>implicit arguments</em>. In the examples above, type class resolution finds the relevant operations, which are declared in the relevant <em>namespaces</em>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20nat.add%0A#check%20nat.mul%0A#check%20list.append%0A#check%20list.cons" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="n">nat.add</span>
+<span class="k">#check</span> <span class="n">nat.mul</span>
+<span class="k">#check</span> <span class="n">list.append</span>
+<span class="k">#check</span> <span class="n">list.cons</span>
+</pre></div>
+</div>
+</div><p>When generic functions and notations are available, however, it is usually better to use them, because Lean&#8217;s automation is designed to work well with generic functions and facts. Incidentally, when infix notation is defined for a binary operation, Lean&#8217;s parser will let you put the notation in parentheses to refer to the operation in prefix form:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20(+)%0A#check%20(*)%0A#check%20(%E2%89%A4)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="o">(</span><span class="bp">+</span><span class="o">)</span>
+<span class="k">#check</span> <span class="o">(</span><span class="bp">*</span><span class="o">)</span>
+<span class="k">#check</span> <span class="o">(</span><span class="bp">&#8804;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>Lean knows about Cartesian products and pairs:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20%CE%B1%20%CE%B2%20:%20Type%0Avariables%20(a%E2%82%81%20a%E2%82%82%20:%20%CE%B1)%20(b%20:%20%CE%B2)%20(n%20:%20%E2%84%95)%0Avariables%20(p%20:%20%CE%B1%20%C3%97%20%CE%B2)%20(q%20:%20%CE%B1%20%C3%97%20%E2%84%95)%0A%0A#check%20%CE%B1%20%C3%97%20%CE%B2%0A#check%20(a%E2%82%81,%20a%E2%82%82)%0A#check%20(n,%20b)%0A#check%20p.1%0A#check%20p.2%0A%0A#reduce%20(n,%20b).1%0A#reduce%20(2,%203).1%0A#eval%20(2,%203).1" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="n">&#945;</span> <span class="n">&#946;</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="kd">variables</span> <span class="o">(</span><span class="n">a&#8321;</span> <span class="n">a&#8322;</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">(</span><span class="n">b</span> <span class="o">:</span> <span class="n">&#946;</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span>
+<span class="kd">variables</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#215;</span> <span class="n">&#946;</span><span class="o">)</span> <span class="o">(</span><span class="n">q</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#215;</span> <span class="n">&#8469;</span><span class="o">)</span>
+
+<span class="k">#check</span> <span class="n">&#945;</span> <span class="bp">&#215;</span> <span class="n">&#946;</span>
+<span class="k">#check</span> <span class="o">(</span><span class="n">a&#8321;</span><span class="o">,</span> <span class="n">a&#8322;</span><span class="o">)</span>
+<span class="k">#check</span> <span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span>
+<span class="k">#check</span> <span class="n">p.1</span>
+<span class="k">#check</span> <span class="n">p.2</span>
+
+<span class="k">#reduce</span> <span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span><span class="bp">.</span><span class="mi">1</span>
+<span class="k">#reduce</span> <span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">3</span><span class="o">)</span><span class="bp">.</span><span class="mi">1</span>
+<span class="k">#eval</span> <span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">3</span><span class="o">)</span><span class="bp">.</span><span class="mi">1</span>
+</pre></div>
+</div>
+</div><p>It interprets tuples as iterated products, associated to the right:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20%CE%B1%20%CE%B2%20:%20Type%0Avariables%20(a%E2%82%81%20a%E2%82%82%20:%20%CE%B1)%20(b%20:%20%CE%B2)%20(n%20:%20%E2%84%95)%0A%0A#check%20(n,%20a%E2%82%81,%20b)%0A#reduce%20(n,%20a%E2%82%81,%20b).2%0A#reduce%20(n,%20a%E2%82%81,%20b).2.2" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="n">&#945;</span> <span class="n">&#946;</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="kd">variables</span> <span class="o">(</span><span class="n">a&#8321;</span> <span class="n">a&#8322;</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">(</span><span class="n">b</span> <span class="o">:</span> <span class="n">&#946;</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span>
+
+<span class="k">#check</span> <span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">a&#8321;</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span>
+<span class="k">#reduce</span> <span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">a&#8321;</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span><span class="bp">.</span><span class="mi">2</span>
+<span class="k">#reduce</span> <span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">a&#8321;</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span><span class="bp">.</span><span class="mi">2</span><span class="bp">.</span><span class="mi">2</span>
+</pre></div>
+</div>
+</div><p>Lean also knows about subtypes and option types, which are described in the next chapter.</p>
+</div>
+<div class="section" id="defining-functions">
+<h2>2.2. Defining Functions<a class="headerlink" href="#defining-functions" title="Permalink to this headline">&#182;</a></h2>
+<p>In Lean, one can define a new constant with the <code class="docutils literal notranslate"><span class="pre">definition</span></code> command, which can be abbreviated to <code class="docutils literal notranslate"><span class="pre">def</span></code>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=definition%20foo%20:%20%E2%84%95%20:=%203%0A%0Adef%20bar%20:%20%E2%84%95%20:=%202%20+%202" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">definition</span> <span class="n">foo</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span> <span class="mi">3</span>
+
+<span class="kd">def</span> <span class="n">bar</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span> <span class="mi">2</span> <span class="bp">+</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div><p>As with the <code class="docutils literal notranslate"><span class="pre">#check</span></code> command, Lean first attempts to elaborate the given expression, which is to say, fill in all the information that is left implicit. After that, it checks to make sure that the expression has the stated type. Assuming it succeeds, it creates a new constant with the given name and type, associates it to the expression after the <code class="docutils literal notranslate"><span class="pre">:=</span></code>, and stores it in the environment.</p>
+<p>The type of functions from <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> to <code class="docutils literal notranslate"><span class="pre">&#946;</span></code> is denoted <code class="docutils literal notranslate"><span class="pre">&#945;</span> <span class="pre">&#8594;</span> <span class="pre">&#946;</span></code>. We have already seen that a function <code class="docutils literal notranslate"><span class="pre">f</span></code> is applied to an element <code class="docutils literal notranslate"><span class="pre">x</span></code> in the domain type by writing <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">x</span></code>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20%CE%B1%20%CE%B2%20:%20Type%0Avariables%20(a%E2%82%81%20a%E2%82%82%20:%20%CE%B1)%20(b%20:%20%CE%B2)%20(n%20:%20%E2%84%95)%0Avariables%20f%20:%20%E2%84%95%20%E2%86%92%20%CE%B1%0Avariables%20g%20:%20%CE%B1%20%E2%86%92%20%CE%B2%20%E2%86%92%20%E2%84%95%0A%0A#check%20f%20n%0A#check%20g%20a%E2%82%81%0A#check%20g%20a%E2%82%82%20b%0A#check%20f%20(g%20a%E2%82%82%20b)%0A#check%20g%20(f%20(g%20a%E2%82%82%20b))" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="n">&#945;</span> <span class="n">&#946;</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="kd">variables</span> <span class="o">(</span><span class="n">a&#8321;</span> <span class="n">a&#8322;</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">(</span><span class="n">b</span> <span class="o">:</span> <span class="n">&#946;</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span>
+<span class="kd">variables</span> <span class="n">f</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span>
+<span class="kd">variables</span> <span class="n">g</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#946;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+
+<span class="k">#check</span> <span class="n">f</span> <span class="n">n</span>
+<span class="k">#check</span> <span class="n">g</span> <span class="n">a&#8321;</span>
+<span class="k">#check</span> <span class="n">g</span> <span class="n">a&#8322;</span> <span class="n">b</span>
+<span class="k">#check</span> <span class="n">f</span> <span class="o">(</span><span class="n">g</span> <span class="n">a&#8322;</span> <span class="n">b</span><span class="o">)</span>
+<span class="k">#check</span> <span class="n">g</span> <span class="o">(</span><span class="n">f</span> <span class="o">(</span><span class="n">g</span> <span class="n">a&#8322;</span> <span class="n">b</span><span class="o">))</span>
+</pre></div>
+</div>
+</div><p>Conversely, functions are introduced using <code class="docutils literal notranslate"><span class="pre">&#955;</span></code> abstraction.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20(%CE%B1%20:%20Type)%20(n%20:%20%E2%84%95)%20(i%20:%20%E2%84%A4)%0A%0A#check%20%CE%BB%20x%20:%20%E2%84%95,%20x%20+%203%0A#check%20%CE%BB%20x,%20x%20+%203%0A#check%20%CE%BB%20x,%20x%20+%20n%0A#check%20%CE%BB%20x,%20x%20+%20i%0A#check%20%CE%BB%20x%20y,%20x%20+%20y%20+%201%0A#check%20%CE%BB%20x%20:%20%CE%B1,%20x" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">i</span> <span class="o">:</span> <span class="n">&#8484;</span><span class="o">)</span>
+
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span>
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span>
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">n</span>
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">i</span>
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span> <span class="n">y</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">y</span> <span class="bp">+</span> <span class="mi">1</span>
+<span class="k">#check</span> <span class="bp">&#955;</span> <span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">,</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div><p>As the examples make clear, you can leave out the type of the abstracted variable when it can be inferred. The following two definitions mean the same thing:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20foo%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%20:=%20%CE%BB%20x%20:%20%E2%84%95,%20x%20+%203%0Adef%20bar%20:=%20%CE%BB%20x,%20x%20+%203" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">foo</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="o">:=</span> <span class="bp">&#955;</span> <span class="n">x</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span>
+<span class="kd">def</span> <span class="n">bar</span> <span class="o">:=</span> <span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</div><p>Instead of using a lambda, you can abstract variables by putting them before the colon:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20foo%20(x%20y%20:%20%E2%84%95)%20:%20%E2%84%95%20:=%20x%20+%20y%20+%203%0Adef%20bar%20(x%20y)%20:=%20x%20+%20y%20+%203" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">foo</span> <span class="o">(</span><span class="n">x</span> <span class="n">y</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">y</span> <span class="bp">+</span> <span class="mi">3</span>
+<span class="kd">def</span> <span class="n">bar</span> <span class="o">(</span><span class="n">x</span> <span class="n">y</span><span class="o">)</span> <span class="o">:=</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">y</span> <span class="bp">+</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</div><p>You can even test a definition without adding it to the environment, using the <code class="docutils literal notranslate"><span class="pre">example</span></code> command:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=example%20(x%20y)%20:=%20x%20+%20y%20+%203" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">example</span> <span class="o">(</span><span class="n">x</span> <span class="n">y</span><span class="o">)</span> <span class="o">:=</span> <span class="n">x</span> <span class="bp">+</span> <span class="n">y</span> <span class="bp">+</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</div><p>When variables have been declared, functions implicitly depend on the variables mentioned in the definition:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20(%CE%B1%20:%20Type)%20(x%20:%20%CE%B1)%0Avariables%20m%20n%20:%20%E2%84%95%0A%0Adef%20foo%20:=%20x%0Adef%20bar%20:=%20m%20+%20n%20+%203%0Adef%20baz%20(k)%20:=%20m%20+%20k%20+%203%0A%0A#check%20foo%0A#check%20bar%0A#check%20baz" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span>
+<span class="kd">variables</span> <span class="n">m</span> <span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span>
+
+<span class="kd">def</span> <span class="n">foo</span> <span class="o">:=</span> <span class="n">x</span>
+<span class="kd">def</span> <span class="n">bar</span> <span class="o">:=</span> <span class="n">m</span> <span class="bp">+</span> <span class="n">n</span> <span class="bp">+</span> <span class="mi">3</span>
+<span class="kd">def</span> <span class="n">baz</span> <span class="o">(</span><span class="n">k</span><span class="o">)</span> <span class="o">:=</span> <span class="n">m</span> <span class="bp">+</span> <span class="n">k</span> <span class="bp">+</span> <span class="mi">3</span>
+
+<span class="k">#check</span> <span class="n">foo</span>
+<span class="k">#check</span> <span class="n">bar</span>
+<span class="k">#check</span> <span class="n">baz</span>
+</pre></div>
+</div>
+</div><p>Evaluating expressions involving abstraction and application has the expected behavior:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#reduce%20(%CE%BB%20x,%20x%20+%203)%202%0A#eval%20(%CE%BB%20x,%20x%20+%203)%202%0A%0Adef%20foo%20(x%20:%20%E2%84%95)%20:%20%E2%84%95%20:=%20x%20+%203%0A%0A#reduce%20foo%202%0A#eval%20foo%202" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#reduce</span> <span class="o">(</span><span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span><span class="o">)</span> <span class="mi">2</span>
+<span class="k">#eval</span> <span class="o">(</span><span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span><span class="o">)</span> <span class="mi">2</span>
+
+<span class="kd">def</span> <span class="n">foo</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span> <span class="n">x</span> <span class="bp">+</span> <span class="mi">3</span>
+
+<span class="k">#reduce</span> <span class="n">foo</span> <span class="mi">2</span>
+<span class="k">#eval</span> <span class="n">foo</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div><p>Both expressions evaluate to 5.</p>
+<p>In the CIC, types are just certain kinds of objects, so functions can depend on types. For example, the following defines a polymorphic identity function:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Adef%20id%20(%CE%B1%20:%20Type)%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%0A%0A#check%20id%20%E2%84%95%203%0A#eval%20id%20%E2%84%95%203%0A%0A#check%20id%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">id</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="o">:=</span> <span class="n">x</span>
+
+<span class="k">#check</span> <span class="n">id</span> <span class="n">&#8469;</span> <span class="mi">3</span>
+<span class="k">#eval</span> <span class="n">id</span> <span class="n">&#8469;</span> <span class="mi">3</span>
+
+<span class="k">#check</span> <span class="n">id</span>
+</pre></div>
+</div>
+</div><p>Lean indicates that the type of <code class="docutils literal notranslate"><span class="pre">id</span></code> is <code class="docutils literal notranslate"><span class="pre">&#928;</span> <span class="pre">&#945;</span> <span class="pre">:</span> <span class="pre">Type,</span> <span class="pre">&#945;</span> <span class="pre">&#8594;</span> <span class="pre">&#945;</span></code>. This is an example of a <em>pi type</em>, also known as a dependent function type, since the type of the second argument to <code class="docutils literal notranslate"><span class="pre">id</span></code> depends on the first.</p>
+<p>It is generally redundant to have to give the first argument to <code class="docutils literal notranslate"><span class="pre">id</span></code> explicitly, since it can be inferred from the second argument. Using curly braces marks the argument as <em>implicit</em>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Adef%20id%20%7B%CE%B1%20:%20Type%7D%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%0A%0A#check%20id%203%0A#eval%20id%203%0A%0A#check%20id%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">id</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">}</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="o">:=</span> <span class="n">x</span>
+
+<span class="k">#check</span> <span class="n">id</span> <span class="mi">3</span>
+<span class="k">#eval</span> <span class="n">id</span> <span class="mi">3</span>
+
+<span class="k">#check</span> <span class="n">id</span>
+</pre></div>
+</div>
+</div><p>In case an implicit argument follows the last given argument in a function application, Lean inserts the implicit argument eagerly and tries to infer it. Using double curly braces <code class="docutils literal notranslate"><span class="pre">{{</span></code> &#8230; <code class="docutils literal notranslate"><span class="pre">}}</span></code>, or the unicode-block equivalents obtained with <code class="docutils literal notranslate"><span class="pre">\{{</span></code> and <code class="docutils literal notranslate"><span class="pre">\}}</span></code>, tells the parser to be more conservative about inserting the argument. The difference is illustrated below.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20id%E2%82%81%20%7B%CE%B1%20:%20Type%7D%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%0Adef%20id%E2%82%82%20%E2%A6%83%CE%B1%20:%20Type%E2%A6%84%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%0A%0A#check%20(id%E2%82%81%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95)%0A#check%20(id%E2%82%82%20:%20%CE%A0%20%CE%B1%20:%20Type,%20%CE%B1%20%E2%86%92%20%CE%B1)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">id&#8321;</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">}</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="o">:=</span> <span class="n">x</span>
+<span class="kd">def</span> <span class="n">id&#8322;</span> <span class="o">&#10627;</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">&#10628;</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="o">:=</span> <span class="n">x</span>
+
+<span class="k">#check</span> <span class="o">(</span><span class="n">id&#8321;</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span><span class="o">)</span>
+<span class="k">#check</span> <span class="o">(</span><span class="n">id&#8322;</span> <span class="o">:</span> <span class="bp">&#928;</span> <span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">,</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>In the next section, we will see that Lean supports a hierarchy of type universes, so that the following definition of the identity function is more general:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Auniverse%20u%0Adef%20id%20%7B%CE%B1%20:%20Type%20u%7D%20(x%20:%20%CE%B1)%20:=%20x%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">def</span> <span class="n">id</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:=</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div><p>If you <code class="docutils literal notranslate"><span class="pre">#check</span> <span class="pre">&#64;list.append</span></code>, you will see that, similarly, the append function takes two lists of elements of any type, where the type can occur in any type universe.</p>
+<p>Incidentally, subsequent arguments to a dependent function can depend on arbitrary parameters, not just other types:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variable%20vec%20:%20%E2%84%95%20%E2%86%92%20Type%0Avariable%20foo%20:%20%CE%A0%20%7Bn%20:%20%E2%84%95%7D,%20vec%20n%20%E2%86%92%20vec%20n%0Avariable%20v%20:%20vec%203%0A%0A#check%20foo%20v" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variable</span> <span class="n">vec</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="kt">Type</span>
+<span class="kd">variable</span> <span class="n">foo</span> <span class="o">:</span> <span class="bp">&#928;</span> <span class="o">{</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">},</span> <span class="n">vec</span> <span class="n">n</span> <span class="bp">&#8594;</span> <span class="n">vec</span> <span class="n">n</span>
+<span class="kd">variable</span> <span class="n">v</span> <span class="o">:</span> <span class="n">vec</span> <span class="mi">3</span>
+
+<span class="k">#check</span> <span class="n">foo</span> <span class="n">v</span>
+</pre></div>
+</div>
+</div><p>This is precisely the sense in which dependent type theory is dependent.</p>
+<p>The CIC also supports recursive definitions on inductively defined types.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=open%20nat%0A%0Adef%20exp%20(x%20:%20%E2%84%95)%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%0A%7C%200%20%20%20%20%20%20:=%201%0A%7C%20(succ%20n)%20:=%20exp%20n%20*%20(succ%20n)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">open</span> <span class="n">nat</span>
+
+<span class="kd">def</span> <span class="n">exp</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>      <span class="o">:=</span> <span class="mi">1</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">succ</span> <span class="n">n</span><span class="o">)</span> <span class="o">:=</span> <span class="n">exp</span> <span class="n">n</span> <span class="bp">*</span> <span class="o">(</span><span class="n">succ</span> <span class="n">n</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>We will provide lots of examples of those in the next chapter.</p>
+</div>
+<div class="section" id="defining-new-types">
+<h2>2.3. Defining New Types<a class="headerlink" href="#defining-new-types" title="Permalink to this headline">&#182;</a></h2>
+<p>In the version of the Calculus of Inductive Constructions implemented by Lean, we start with a sequence of type universes, <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">3</span></code>, &#8230; The universe <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">0</span></code> is called <code class="docutils literal notranslate"><span class="pre">Prop</span></code> and has special properties that we will describe later. <code class="docutils literal notranslate"><span class="pre">Type</span> <span class="pre">u</span></code> is a syntactic sugar for <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">(u+1)</span></code>. For each <code class="docutils literal notranslate"><span class="pre">u</span></code>, an element <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">:</span> <span class="pre">Type</span> <span class="pre">u</span></code> is itself a type. If you execute the following,</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0A#check%20Type%20u" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="k">#check</span> <span class="kt">Type</span> <span class="n">u</span>
+</pre></div>
+</div>
+</div><p>you will see that each <code class="docutils literal notranslate"><span class="pre">Type</span> <span class="pre">u</span></code> itself has type <code class="docutils literal notranslate"><span class="pre">Type</span> <span class="pre">(u+1)</span></code>. The notation <code class="docutils literal notranslate"><span class="pre">Type</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">Type</span> <span class="pre">0</span></code>, which is a shorthand for <code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">1</span></code>.</p>
+<p>In addition to the type universes, the Calculus of Inductive Constructions provides two means of forming new types:</p>
+<ul class="simple">
+<li>pi types</li>
+<li>inductive types</li>
+</ul>
+<p>Lean provides an additional means of forming new types:</p>
+<ul class="simple">
+<li>quotient types</li>
+</ul>
+<p>We discussed pi types in the last section. Quotient types provide a means of defining a new type given a type and an equivalence relation on that type. They are used in the standard library to define multisets, which are represented as lists that are considered the same when one is a permutation of another.</p>
+<p>Inductive types are surprisingly useful. The natural numbers are defined inductively:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Ainductive%20nat%20:%20Type%0A%7C%20zero%20:%20nat%0A%7C%20succ%20:%20nat%20%E2%86%92%20nat%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">inductive</span> <span class="n">nat</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">zero</span> <span class="o">:</span> <span class="n">nat</span>
+<span class="bp">|</span> <span class="n">succ</span> <span class="o">:</span> <span class="n">nat</span> <span class="bp">&#8594;</span> <span class="n">nat</span>
+</pre></div>
+</div>
+</div><p>So is the type of lists of elements of a given type <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Auniverse%20u%0A%0Ainductive%20list%20(%CE%B1%20:%20Type%20u)%20:%20Type%20u%0A%7C%20nil%20%20:%20list%0A%7C%20cons%20:%20%CE%B1%20%E2%86%92%20list%20%E2%86%92%20list%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+
+<span class="kd">inductive</span> <span class="n">list</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span>
+<span class="bp">|</span> <span class="n">nil</span>  <span class="o">:</span> <span class="n">list</span>
+<span class="bp">|</span> <span class="n">cons</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="bp">&#8594;</span> <span class="n">list</span>
+</pre></div>
+</div>
+</div><p>The booleans form an inductive type, as do, indeed, any finitely enumerated type:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Ainductive%20bool%20:%20Type%0A%7C%20tt%20:%20bool%0A%7C%20ff%20:%20bool%0A%0Ainductive%20Beatle%20:%20Type%0A%7C%20John%20%20%20:%20Beatle%0A%7C%20Paul%20%20%20:%20Beatle%0A%7C%20George%20:%20Beatle%0A%7C%20Ringo%20%20:%20Beatle%0A--%20END%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">inductive</span> <span class="n">bool</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">tt</span> <span class="o">:</span> <span class="n">bool</span>
+<span class="bp">|</span> <span class="n">ff</span> <span class="o">:</span> <span class="n">bool</span>
+
+<span class="kd">inductive</span> <span class="n">Beatle</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">John</span>   <span class="o">:</span> <span class="n">Beatle</span>
+<span class="bp">|</span> <span class="n">Paul</span>   <span class="o">:</span> <span class="n">Beatle</span>
+<span class="bp">|</span> <span class="n">George</span> <span class="o">:</span> <span class="n">Beatle</span>
+<span class="bp">|</span> <span class="n">Ringo</span>  <span class="o">:</span> <span class="n">Beatle</span>
+</pre></div>
+</div>
+</div><p>So are the type of binary trees, and the type of countably branching trees in which every node has children indexed by the type of natural numbers:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=inductive%20binary_tree%20:%20Type%0A%7C%20empty%20:%20binary_tree%0A%7C%20cons%20%20:%20binary_tree%20%E2%86%92%20binary_tree%20%E2%86%92%20binary_tree%0A%0Ainductive%20nat_tree%20:%20Type%0A%7C%20empty%20:%20nat_tree%0A%7C%20sup%20%20%20:%20(%E2%84%95%20%E2%86%92%20nat_tree)%20%E2%86%92%20nat_tree" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">inductive</span> <span class="n">binary_tree</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">empty</span> <span class="o">:</span> <span class="n">binary_tree</span>
+<span class="bp">|</span> <span class="n">cons</span>  <span class="o">:</span> <span class="n">binary_tree</span> <span class="bp">&#8594;</span> <span class="n">binary_tree</span> <span class="bp">&#8594;</span> <span class="n">binary_tree</span>
+
+<span class="kd">inductive</span> <span class="n">nat_tree</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">empty</span> <span class="o">:</span> <span class="n">nat_tree</span>
+<span class="bp">|</span> <span class="n">sup</span>   <span class="o">:</span> <span class="o">(</span><span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">nat_tree</span><span class="o">)</span> <span class="bp">&#8594;</span> <span class="n">nat_tree</span>
+</pre></div>
+</div>
+</div><p>What these examples all have in common is that the associated types are built up freely and inductively by the given <em>constructors</em>. For example, we can build some binary trees:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=inductive%20binary_tree%20:%20Type%0A%7C%20empty%20:%20binary_tree%0A%7C%20cons%20%20:%20binary_tree%20%E2%86%92%20binary_tree%20%E2%86%92%20binary_tree%0A%0A--%20BEGIN%0A#check%20binary_tree.empty%0A#check%20binary_tree.cons%20(binary_tree.empty)%20(binary_tree.empty)%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="n">binary_tree.empty</span>
+<span class="k">#check</span> <span class="n">binary_tree.cons</span> <span class="o">(</span><span class="n">binary_tree.empty</span><span class="o">)</span> <span class="o">(</span><span class="n">binary_tree.empty</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>If we open the namespace <code class="docutils literal notranslate"><span class="pre">binary_tree</span></code>, we can use shorter names:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=inductive%20binary_tree%20:%20Type%0A%7C%20empty%20:%20binary_tree%0A%7C%20cons%20%20:%20binary_tree%20%E2%86%92%20binary_tree%20%E2%86%92%20binary_tree%0A%0A--%20BEGIN%0Aopen%20binary_tree%0A%0A#check%20cons%20empty%20(cons%20(cons%20empty%20empty)%20empty)%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">open</span> <span class="n">binary_tree</span>
+
+<span class="k">#check</span> <span class="n">cons</span> <span class="n">empty</span> <span class="o">(</span><span class="n">cons</span> <span class="o">(</span><span class="n">cons</span> <span class="n">empty</span> <span class="n">empty</span><span class="o">)</span> <span class="n">empty</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>In the Lean library, the identifier <code class="docutils literal notranslate"><span class="pre">empty</span></code> is used as a generic notation for things like the empty set, so opening the <code class="docutils literal notranslate"><span class="pre">binary_tree</span></code> namespaces means that the constant is overloaded. If you write <code class="docutils literal notranslate"><span class="pre">#check</span> <span class="pre">empty</span></code>, Lean will complain about the overload; you need to say something like <code class="docutils literal notranslate"><span class="pre">#check</span> <span class="pre">(empty</span> <span class="pre">:</span> <span class="pre">binary_tree)</span></code> to disambiguate.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">inductive</span></code> command axiomatically declares all of the following:</p>
+<ul class="simple">
+<li>A constant, to denote the new type.</li>
+<li>The associated constructors.</li>
+<li>A corresponding <em>eliminator</em>.</li>
+</ul>
+<p>The latter gives rise to the principles of recursion and induction that we will encounter in the next two chapters.</p>
+<p>We will not give a precise specification of the inductive data types allowed by Lean, but only note here that the description is fairly small and straightforward, and can easily be given a set-theoretic interpretation. Lean also allows <em>mutual</em> inductive types and <em>nested</em> inductive types. As an example, in the definition below, the type under definition appears as a parameter to the <code class="docutils literal notranslate"><span class="pre">list</span></code> type:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=inductive%20tree%20(%CE%B1%20:%20Type)%20:%20Type%0A%7C%20node%20:%20%CE%B1%20%E2%86%92%20list%20tree%20%E2%86%92%20tree" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">inductive</span> <span class="n">tree</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Type</span>
+<span class="bp">|</span> <span class="n">node</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="n">tree</span> <span class="bp">&#8594;</span> <span class="n">tree</span>
+</pre></div>
+</div>
+</div><p>Such definitions are <em>not</em> among Lean&#8217;s axoimatic primitives; rather, they are compiled down to more primitive constructions.</p>
+</div>
+<div class="section" id="records-and-structures">
+<h2>2.4. Records and Structures<a class="headerlink" href="#records-and-structures" title="Permalink to this headline">&#182;</a></h2>
+<p>When computer scientists bundle data together, they tend to call the result a <em>record</em>. When mathematicians do the same, they call it a <em>structure</em>. Lean uses the keyword <code class="docutils literal notranslate"><span class="pre">structure</span></code> to introduce inductive definitions with a single constructor.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">structure</span> <span class="n">color</span> <span class="o">:</span> <span class="kt">Type</span> <span class="o">:=</span>
+<span class="n">mk</span> <span class="o">::</span> <span class="o">(</span><span class="n">red</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">green</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">blue</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">name</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>Here, <code class="docutils literal notranslate"><span class="pre">mk</span></code> is the constructor (if omitted, Lean assumes it is <code class="docutils literal notranslate"><span class="pre">mk</span></code> by default), and <code class="docutils literal notranslate"><span class="pre">red</span></code>, <code class="docutils literal notranslate"><span class="pre">green</span></code>, <code class="docutils literal notranslate"><span class="pre">blue</span></code>, and <code class="docutils literal notranslate"><span class="pre">name</span></code> project the four values that are used to construct an element of <code class="docutils literal notranslate"><span class="pre">color</span></code>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)%0A%0A--%20BEGIN%0Adef%20purple%20:=%20color.mk%20150%200%20150%20%22purple%22%0A%0A#eval%20color.red%20purple%0A#eval%20color.green%20purple%0A#eval%20color.blue%20purple%0A#eval%20color.name%20purple%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">purple</span> <span class="o">:=</span> <span class="n">color.mk</span> <span class="mi">150</span> <span class="mi">0</span> <span class="mi">150</span> <span class="s2">&quot;purple&quot;</span>
+
+<span class="k">#eval</span> <span class="n">color.red</span> <span class="n">purple</span>
+<span class="k">#eval</span> <span class="n">color.green</span> <span class="n">purple</span>
+<span class="k">#eval</span> <span class="n">color.blue</span> <span class="n">purple</span>
+<span class="k">#eval</span> <span class="n">color.name</span> <span class="n">purple</span>
+</pre></div>
+</div>
+</div><p>Because records are so important, Lean provides useful notation for dealing with them. For example, when the type of the record can be inferred, Lean allows the use of <em>anonymous constructors</em> <code class="docutils literal notranslate"><span class="pre">&#10216;</span></code> &#8230; <code class="docutils literal notranslate"><span class="pre">&#10217;</span></code>, entered as <code class="docutils literal notranslate"><span class="pre">\&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">\&gt;</span></code>, or the ascii equivalents <code class="docutils literal notranslate"><span class="pre">(|</span></code> and <code class="docutils literal notranslate"><span class="pre">|)</span></code>. Similarly, one can use the notation <code class="docutils literal notranslate"><span class="pre">.1</span></code>, <code class="docutils literal notranslate"><span class="pre">.2</span></code>, and so on for the projections.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)%0A%0A--%20BEGIN%0Adef%20purple%20:%20color%20:=%20%E2%9F%A8150,%200,%20150,%20%22purple%22%E2%9F%A9%0A%0A#eval%20purple.1%0A#eval%20purple.2%0A#eval%20purple.3%0A#eval%20purple.4%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">purple</span> <span class="o">:</span> <span class="n">color</span> <span class="o">:=</span> <span class="o">&#10216;</span><span class="mi">150</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">150</span><span class="o">,</span> <span class="s2">&quot;purple&quot;</span><span class="o">&#10217;</span>
+
+<span class="k">#eval</span> <span class="n">purple.1</span>
+<span class="k">#eval</span> <span class="n">purple.2</span>
+<span class="k">#eval</span> <span class="n">purple.3</span>
+<span class="k">#eval</span> <span class="n">purple.4</span>
+</pre></div>
+</div>
+</div><p>Alternatively, one can use the notation <code class="docutils literal notranslate"><span class="pre">.</span></code> to extract the relevant projections:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)%0A%0Adef%20purple%20:%20color%20:=%20%E2%9F%A8150,%200,%20150,%20%22purple%22%E2%9F%A9%0A%0A--%20BEGIN%0A#eval%20purple.red%0A#eval%20purple.green%0A#eval%20purple.blue%0A#eval%20purple.name%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#eval</span> <span class="n">purple.red</span>
+<span class="k">#eval</span> <span class="n">purple.green</span>
+<span class="k">#eval</span> <span class="n">purple.blue</span>
+<span class="k">#eval</span> <span class="n">purple.name</span>
+</pre></div>
+</div>
+</div><p>When the type of the record can be inferred, you can also use the following notation to build an instance, explicitly naming each component:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)%0A%0A--%20BEGIN%0Adef%20purple%20:%20color%20:=%0A%7B%20red%20:=%20150,%20blue%20:=%200,%20green%20:=%20150,%20name%20:=%20%22purple%22%20%7D%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">purple</span> <span class="o">:</span> <span class="n">color</span> <span class="o">:=</span>
+<span class="o">{</span> <span class="n">red</span> <span class="o">:=</span> <span class="mi">150</span><span class="o">,</span> <span class="n">blue</span> <span class="o">:=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">green</span> <span class="o">:=</span> <span class="mi">150</span><span class="o">,</span> <span class="n">name</span> <span class="o">:=</span> <span class="s2">&quot;purple&quot;</span> <span class="o">}</span>
+</pre></div>
+</div>
+</div><p>You can also use the <code class="docutils literal notranslate"><span class="pre">with</span></code> keyword for <em>record update</em>, that is, to define an instance of a new record by modifying an existing one:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=structure%20color%20:%20Type%20:=%0Amk%20::%20(red%20:%20%E2%84%95)%20(green%20:%20%E2%84%95)%20(blue%20:%20%E2%84%95)%20(name%20:%20string)%0A%0Adef%20purple%20:%20color%20:=%0A%7B%20red%20:=%20150,%20blue%20:=%200,%20green%20:=%20150,%20name%20:=%20%22purple%22%20%7D%0A%0A--%20BEGIN%0Adef%20mauve%20:=%20%7B%20purple%20with%20green%20:=%20100,%20name%20:=%20%22mauve%22%20%7D%0A%0A#eval%20mauve.red%0A#eval%20mauve.green%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">mauve</span> <span class="o">:=</span> <span class="o">{</span> <span class="n">purple</span> <span class="k">with</span> <span class="n">green</span> <span class="o">:=</span> <span class="mi">100</span><span class="o">,</span> <span class="n">name</span> <span class="o">:=</span> <span class="s2">&quot;mauve&quot;</span> <span class="o">}</span>
+
+<span class="k">#eval</span> <span class="n">mauve.red</span>
+<span class="k">#eval</span> <span class="n">mauve.green</span>
+</pre></div>
+</div>
+</div><p>Lean provides extensive support for reasoning generically about algebraic structures, in particular, allowing the inheritance and sharing of notation and facts. Chief among these is the use of <em>class inference</em>, in a manner similar to that used by functional programming languages like Haskell. For example, the Lean library declares the structures <code class="docutils literal notranslate"><span class="pre">has_one</span></code> and <code class="docutils literal notranslate"><span class="pre">has_mul</span></code> to support the generic notation <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">*</span></code> in structures which have a one and binary multiplication:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Auniverse%20u%0Avariables%20%7B%CE%B1%20:%20Type%20u%7D%0A%0Aclass%20has_one%20(%CE%B1%20:%20Type%20u)%20:=%20(one%20:%20%CE%B1)%0Aclass%20has_mul%20(%CE%B1%20:%20Type%20u)%20:=%20(mul%20:%20%CE%B1%20%E2%86%92%20%CE%B1%20%E2%86%92%20%CE%B1)%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">variables</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span>
+
+<span class="kd">class</span> <span class="n">has_one</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="o">:=</span> <span class="o">(</span><span class="n">one</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span>
+<span class="kd">class</span> <span class="n">has_mul</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="o">:=</span> <span class="o">(</span><span class="n">mul</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>The <code class="docutils literal notranslate"><span class="pre">class</span></code> command not only defines a structure (in the cases above, each storing only one piece of data), but also marks them as targets for <em>class inference</em>. The symbol <code class="docutils literal notranslate"><span class="pre">*</span></code> is notation for the identifier <code class="docutils literal notranslate"><span class="pre">has_mul.mul</span></code>, and if you check the type of <code class="docutils literal notranslate"><span class="pre">has_mul.mul</span></code>, you will see there is an implicit argument for an element of <code class="docutils literal notranslate"><span class="pre">has_mul</span></code>:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#check%20&#64;has_mul.mul" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#check</span> <span class="bp">@</span><span class="n">has_mul.mul</span>
+</pre></div>
+</div>
+</div><p>The sole element of the <code class="docutils literal notranslate"><span class="pre">has_mul</span></code> structure is the relevant multiplication, which should be inferred from the type <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> of the arguments. Given an expression <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">*</span> <span class="pre">b</span></code> where <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> have type <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, Lean searches through instances of <code class="docutils literal notranslate"><span class="pre">has_mul</span></code> that have been declared to the system, in search of one that matches the type <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>. When it finds such an instance, it uses that as the argument to <code class="docutils literal notranslate"><span class="pre">mul</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">has_mul</span></code> and <code class="docutils literal notranslate"><span class="pre">has_one</span></code> in place, some of the most basic objects of the algebraic hierarchy are defined as follows:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0A--%20BEGIN%0Auniverse%20u%0Avariables%20%7B%CE%B1%20:%20Type%20u%7D%0A%0Aclass%20semigroup%20(%CE%B1%20:%20Type%20u)%20extends%20has_mul%20%CE%B1%20:=%0A(mul_assoc%20:%20%E2%88%80%20a%20b%20c%20:%20%CE%B1,%20a%20*%20b%20*%20c%20=%20a%20*%20(b%20*%20c))%0A%0Aclass%20comm_semigroup%20(%CE%B1%20:%20Type%20u)%20extends%20semigroup%20%CE%B1%20:=%0A(mul_comm%20:%20%E2%88%80%20a%20b%20:%20%CE%B1,%20a%20*%20b%20=%20b%20*%20a)%0A%0Aclass%20monoid%20(%CE%B1%20:%20Type%20u)%20extends%20semigroup%20%CE%B1,%20has_one%20%CE%B1%20:=%0A(one_mul%20:%20%E2%88%80%20a%20:%20%CE%B1,%201%20*%20a%20=%20a)%20(mul_one%20:%20%E2%88%80%20a%20:%20%CE%B1,%20a%20*%201%20=%20a)%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">variables</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span>
+
+<span class="kd">class</span> <span class="n">semigroup</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="kd">extends</span> <span class="n">has_mul</span> <span class="n">&#945;</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">mul_assoc</span> <span class="o">:</span> <span class="bp">&#8704;</span> <span class="n">a</span> <span class="n">b</span> <span class="n">c</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">,</span> <span class="n">a</span> <span class="bp">*</span> <span class="n">b</span> <span class="bp">*</span> <span class="n">c</span> <span class="bp">=</span> <span class="n">a</span> <span class="bp">*</span> <span class="o">(</span><span class="n">b</span> <span class="bp">*</span> <span class="n">c</span><span class="o">))</span>
+
+<span class="kd">class</span> <span class="n">comm_semigroup</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="kd">extends</span> <span class="n">semigroup</span> <span class="n">&#945;</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">mul_comm</span> <span class="o">:</span> <span class="bp">&#8704;</span> <span class="n">a</span> <span class="n">b</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">,</span> <span class="n">a</span> <span class="bp">*</span> <span class="n">b</span> <span class="bp">=</span> <span class="n">b</span> <span class="bp">*</span> <span class="n">a</span><span class="o">)</span>
+
+<span class="kd">class</span> <span class="n">monoid</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span> <span class="kd">extends</span> <span class="n">semigroup</span> <span class="n">&#945;</span><span class="o">,</span> <span class="n">has_one</span> <span class="n">&#945;</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">one_mul</span> <span class="o">:</span> <span class="bp">&#8704;</span> <span class="n">a</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">,</span> <span class="mi">1</span> <span class="bp">*</span> <span class="n">a</span> <span class="bp">=</span> <span class="n">a</span><span class="o">)</span> <span class="o">(</span><span class="n">mul_one</span> <span class="o">:</span> <span class="bp">&#8704;</span> <span class="n">a</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">,</span> <span class="n">a</span> <span class="bp">*</span> <span class="mi">1</span> <span class="bp">=</span> <span class="n">a</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>There are a few things to note here. First, these definitions are introduced as <code class="docutils literal notranslate"><span class="pre">class</span></code> definitions also. This marks them as eligible for class inference, enabling Lean to find the <code class="docutils literal notranslate"><span class="pre">semigroup</span></code>, <code class="docutils literal notranslate"><span class="pre">comm_semigroup</span></code>, or <code class="docutils literal notranslate"><span class="pre">monoid</span></code> structure associated to a type, <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, when necessary. The <code class="docutils literal notranslate"><span class="pre">extends</span></code> keyword does two things: it defines the new structure by adding the given fields to those of the structures being extended, and it declares any instance of the new structure to be an instance of the previous ones. Finally, notice that the new elements of these structures are not data, but, rather, <em>properties</em> that the data is assumed to satisfy. It is a consequence of the encoding of propositions and proofs in dependent type theory that we can treat assumptions like associativity and commutativity in a manner similar to data. We will discuss this encoding in a later chapter.</p>
+<p>Because any monoid is an instance of <code class="docutils literal notranslate"><span class="pre">has_one</span></code> and <code class="docutils literal notranslate"><span class="pre">has_mul</span></code>, Lean can interpret <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">*</span></code> in any monoid.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=variables%20(M%20:%20Type)%20%5Bmonoid%20M%5D%0Avariables%20a%20b%20:%20M%0A%0A#check%20a%20*%201%20*%20b" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="o">(</span><span class="n">M</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">monoid</span> <span class="n">M</span><span class="o">]</span>
+<span class="kd">variables</span> <span class="n">a</span> <span class="n">b</span> <span class="o">:</span> <span class="n">M</span>
+
+<span class="k">#check</span> <span class="n">a</span> <span class="bp">*</span> <span class="mi">1</span> <span class="bp">*</span> <span class="n">b</span>
+</pre></div>
+</div>
+</div><p>The declaration <code class="docutils literal notranslate"><span class="pre">[monoid</span> <span class="pre">M]</span></code> declares a variable ranging over the monoid structure, but leaves it anonymous. The variable is automatically inserted in any definition that depends on <code class="docutils literal notranslate"><span class="pre">M</span></code>, and is marked for class inference. We can now define operations generically. For example, the notion of squaring an element makes sense in any structure with a multiplication.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Adef%20square%20%7B%CE%B1%20:%20Type%20u%7D%20%5Bhas_mul%20%CE%B1%5D%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%20*%20x" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">def</span> <span class="n">square</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span> <span class="o">[</span><span class="n">has_mul</span> <span class="n">&#945;</span><span class="o">]</span> <span class="o">(</span><span class="n">x</span> <span class="o">:</span> <span class="n">&#945;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="o">:=</span> <span class="n">x</span> <span class="bp">*</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div><p>Because <code class="docutils literal notranslate"><span class="pre">monoid</span></code> is an instance of <code class="docutils literal notranslate"><span class="pre">has_mul</span></code>, we can then use the generic squaring operation in any monoid.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Adef%20square%20%7B%CE%B1%20:%20Type%20u%7D%20%5Bhas_mul%20%CE%B1%5D%20(x%20:%20%CE%B1)%20:%20%CE%B1%20:=%20x%20*%20x%0A%0A--%20BEGIN%0Avariables%20(M%20:%20Type)%20%5Bmonoid%20M%5D%0Avariables%20a%20b%20:%20M%0A%0A#check%20square%20a%20*%20square%20b%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">variables</span> <span class="o">(</span><span class="n">M</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">monoid</span> <span class="n">M</span><span class="o">]</span>
+<span class="kd">variables</span> <span class="n">a</span> <span class="n">b</span> <span class="o">:</span> <span class="n">M</span>
+
+<span class="k">#check</span> <span class="n">square</span> <span class="n">a</span> <span class="bp">*</span> <span class="n">square</span> <span class="n">b</span>
+</pre></div>
+</div>
+</div></div>
+<div class="section" id="mathematics-and-computation">
+<span id="id2"></span><h2>2.5. Mathematics and Computation<a class="headerlink" href="#mathematics-and-computation" title="Permalink to this headline">&#182;</a></h2>
+<p>Lean aims to support both mathematical abstraction alongside pragmatic computation, allowing both to interact in a common foundational framework. Some users will be interested in viewing Lean as a programming language, and making sure that every assertion has direct computational meaning. Others will be interested in treating Lean as a system for reasoning about abstract mathematical objects and assertions, which may not have straightforward computational interpretations. Lean is designed to be a comfortable environment for both kinds of users.</p>
+<p>But Lean is also designed to support users who want to maintain both world views at once. This includes mathematical users who, having developed an abstract mathematical theory, would then like to start computing with the mathematical objects in a verified way. It also includes computer scientists and engineers who, having written a program or modeled a piece of hardware or software in Lean, would like to verify claims about it against a background mathematical theory of arithmetic, analysis, dynamical systems, or stochastic processes.</p>
+<p>Lean employs a number of carefully chosen devices to support a clean and principled unification of the two worlds. Chief among these is the inclusion of a type <code class="docutils literal notranslate"><span class="pre">Prop</span></code> of propositions, or assertions. If <code class="docutils literal notranslate"><span class="pre">p</span></code> is an element of type <code class="docutils literal notranslate"><span class="pre">Prop</span></code>, you can think of an element <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">:</span> <span class="pre">p</span></code> as representing evidence that <code class="docutils literal notranslate"><span class="pre">p</span></code> is true, or a proof of <code class="docutils literal notranslate"><span class="pre">p</span></code>, or simply the fact that <code class="docutils literal notranslate"><span class="pre">p</span></code> holds. The element <code class="docutils literal notranslate"><span class="pre">t</span></code>, however, does not bear any computational information. In contrast, if <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> is an element of <code class="docutils literal notranslate"><span class="pre">Type</span> <span class="pre">u</span></code> for any <code class="docutils literal notranslate"><span class="pre">u</span></code> greater than 0 and <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">:</span> <span class="pre">&#945;</span></code>, then <code class="docutils literal notranslate"><span class="pre">t</span></code> contains data, and can be evaluated.</p>
+<p>Lean allows us to to define nonconstructive functions using familiar classical principles, provided we mark the associated definitions as <code class="docutils literal notranslate"><span class="pre">noncomputable</span></code>.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=open%20classical%0Alocal%20attribute%20%5Binstance%5D%20prop_decidable%0A%0Anoncomputable%20def%20choose%20(p%20:%20%E2%84%95%20%E2%86%92%20Prop)%20:%20%E2%84%95%20:=%0Aif%20h%20:%20(%E2%88%83%20n%20:%20%E2%84%95,%20p%20n)%20then%20some%20h%20else%200%0A%0Anoncomputable%20def%20inverse%20(f%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95)%20(n%20:%20%E2%84%95)%20:%20%E2%84%95%20:=%0Aif%20h%20:%20(%E2%88%83%20m%20:%20%E2%84%95,%20f%20m%20=%20n)%20then%20some%20h%20else%200" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">open</span> <span class="n">classical</span>
+<span class="kn">local</span> <span class="kn">attribute</span> <span class="o">[</span><span class="kd">instance</span><span class="o">]</span> <span class="n">prop_decidable</span>
+
+<span class="kd">noncomputable</span> <span class="kd">def</span> <span class="n">choose</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="kt">Prop</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span>
+<span class="k">if</span> <span class="n">h</span> <span class="o">:</span> <span class="o">(</span><span class="bp">&#8707;</span> <span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">,</span> <span class="n">p</span> <span class="n">n</span><span class="o">)</span> <span class="k">then</span> <span class="n">some</span> <span class="n">h</span> <span class="k">else</span> <span class="mi">0</span>
+
+<span class="kd">noncomputable</span> <span class="kd">def</span> <span class="n">inverse</span> <span class="o">(</span><span class="n">f</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="o">:=</span>
+<span class="k">if</span> <span class="n">h</span> <span class="o">:</span> <span class="o">(</span><span class="bp">&#8707;</span> <span class="n">m</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">,</span> <span class="n">f</span> <span class="n">m</span> <span class="bp">=</span> <span class="n">n</span><span class="o">)</span> <span class="k">then</span> <span class="n">some</span> <span class="n">h</span> <span class="k">else</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div><p>In this example, declaring the type class instance <code class="docutils literal notranslate"><span class="pre">prop_decidable</span></code> allows us to use a classical definition by cases, depending on whether an arbitrary proposition is true or false. Given an arbitrary predicate <code class="docutils literal notranslate"><span class="pre">p</span></code> on the natural numbers, <code class="docutils literal notranslate"><span class="pre">choose</span> <span class="pre">p</span></code> returns an <code class="docutils literal notranslate"><span class="pre">n</span></code> satisfying <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">n</span></code> if there is one, and <code class="docutils literal notranslate"><span class="pre">0</span></code> otherwise. For example, <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">n</span></code> may assert that <code class="docutils literal notranslate"><span class="pre">n</span></code> code-blocks a halting computation sequence for some Turing machine, on a given input. In that case, <code class="docutils literal notranslate"><span class="pre">choose</span> <span class="pre">p</span></code> magically decides whether or not such a computation exists, and returns one if it doesn&#8217;t. The second definition makes a best effort to define an inverse to a function <code class="docutils literal notranslate"><span class="pre">f</span></code> from the natural numbers to the natural numbers, mapping each <code class="docutils literal notranslate"><span class="pre">n</span></code> to some <code class="docutils literal notranslate"><span class="pre">m</span></code> such that <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">m</span> <span class="pre">=</span> <span class="pre">n</span></code>, and zero otherwise.</p>
+<p>Lean cannot (and does not even try) to generate bytecode for noncomputable functions. But expressions <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">:</span> <span class="pre">&#945;</span></code>, where <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> is a type of data, can contain subexpressions that are elements of <code class="docutils literal notranslate"><span class="pre">Prop</span></code>, and these can refer to nonconstructive objects. During the extraction of bytecode, these elements are simply ignored, and do not contribute to the computational content of <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+<p>For that reason, abstract elements in Lean&#8217;s library can have <em>computational refinements</em>. For example, for every type, <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, there is another type, <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">&#945;</span></code>, of sets of elements of <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> and some sets satisfy the property of being <code class="docutils literal notranslate"><span class="pre">finite</span></code>. Saying that a set is finite is equivalent to saying that there exists a list that contains exactly the same elements. But this statement is a proposition, which means that it is impossible to extract such a list from the mere assertion that it exists. For that reason, the standard library also defines a type <code class="docutils literal notranslate"><span class="pre">finset</span> <span class="pre">&#945;</span></code>, which is better suited to computation. An element <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">:</span> <span class="pre">finset</span> <span class="pre">&#945;</span></code> is represented by a list of elements of <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> without duplicates. Using quotient types, we can arrange that lists that differ up to permutation are considered equal, and a defining principle of quotient types allows us to define a function on <code class="docutils literal notranslate"><span class="pre">finset</span> <span class="pre">&#945;</span></code> in terms of any list that represents it, provided that we show that our definition is invariant under permutations of the list. Computationally, an element of <code class="docutils literal notranslate"><span class="pre">finset</span> <span class="pre">&#945;</span></code> <em>is</em> just a list. Everything else is essentially a contract that we commit ourselves to obeying when working with elements of <code class="docutils literal notranslate"><span class="pre">finset</span> <span class="pre">&#945;</span></code>. The contract is important to reasoning about the results of our computations and their properties, but it plays no role in the computation itself.</p>
+<p>As another example of the interaction between propositions and data, consider the fact that we do not always have algorithms that determine whether a proposition is true (consider, for example, the proposition that a Turing machine halts). In many cases, however, we do. For example, assertions <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">&lt;</span> <span class="pre">n</span></code> about natural numbers, and Boolean combinations of these, can be evaluated. Propositions like this are said to be <em>decidable</em>. Lean&#8217;s library uses class inference to infer the decidability, and when it succeeds, you can use a decidable property in an <code class="docutils literal notranslate"><span class="pre">if</span></code> &#8230; <code class="docutils literal notranslate"><span class="pre">then</span></code> &#8230; <code class="docutils literal notranslate"><span class="pre">else</span></code> conditional statement. Computationally, what is going on is that class inference finds the relevant procedure, and the bytecode evaluator uses it.</p>
+<p>One side effect of the choice of CIC as a foundation is that all functions we define, computational or not, are total. Once again, dependent type theory offers various mechanisms that we can use to restrict the range of applicability of a function, and some will be described later on.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Programming in Lean</a></h1>
+
+
+
+
+
+
+
+
+<!-- <h3>Navigation</h3> -->
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Types and Terms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#some-basic-types">2.1. Some Basic Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-functions">2.2. Defining Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-new-types">2.3. Defining New Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#records-and-structures">2.4. Records and Structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mathematics-and-computation">2.5. Mathematics and Computation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="basic_programming.html">3. Basic Programming</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monads.html">4. Monads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_tactics.html">5. Writing Tactics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_automation.html">6. Writing Automation</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="programming_in_lean.pdf">PDF version</a></li>
+    
+    <li class="toctree-l1"><a href="https://leanprover.github.io/">Lean Home</a></li>
+    
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Jeremy Avigad and Simon Hudon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/types_and_terms.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

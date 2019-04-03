@@ -1,0 +1,127 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ascii" />
+    <title>1. Introduction &#8212; Programming in Lean 3.4.2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Types and Terms" href="types_and_terms.html" />
+    <link rel="prev" title="Programming in Lean" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<span id="id1"></span><h1>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">&#182;</a></h1>
+<p>This tutorial can be viewed as a companion to <a class="reference external" href="https://leanprover.github.io/theorem_proving_in_lean/">Theorem Proving in Lean</a>, which presents Lean as a system for building mathematical libraries and stating and proving mathematical theorems. From that perspective, the point of Lean is to implement a formal axiomatic framework in which one can define mathematical objects and reason about them.</p>
+<p>But expressions in Lean have a computational interpretation, which is to say, they can be <em>evaluated</em>. Any closed term of type <code class="docutils literal notranslate"><span class="pre">nat</span></code> &#8211; that is, any term of type <code class="docutils literal notranslate"><span class="pre">nat</span></code> without free variables &#8211; evaluates to a numeral, as long as it is defined in the computational fragment of Lean&#8217;s foundational framework. Similarly, any closed term of type <code class="docutils literal notranslate"><span class="pre">list</span> <span class="pre">nat</span></code> evaluates to a list of numerals, and any closed term of type <code class="docutils literal notranslate"><span class="pre">bool</span></code> evaluates either to the boolean value <code class="docutils literal notranslate"><span class="pre">tt</span></code>, for &#8220;true,&#8221; or <code class="docutils literal notranslate"><span class="pre">ff</span></code>, for &#8220;false.&#8221;</p>
+<p>This provides another perspective on Lean: instead of thinking of it as a theorem prover whose language just happens to have a computational interpretation, think of it as a programming language that just happens to come equipped with a rich specification language and an interactive environment for proving that programs meet their specifications. The specification language and proof system are quite powerful, rich enough, in fact, to include all conventional mathematics.</p>
+<p>Lean&#8217;s underlying logical framework, the Calculus of Inductive Constructions, constitutes a surprisingly good programming language. It is expressive enough to define all sorts of data structures, and it supports powerful abstractions. Programs written in the language can be evaluated efficiently by Lean&#8217;s virtual-machine interpreter, and work is underway to support code extraction and efficient compilation in a future version of Lean.</p>
+<p>Viewed from a computational perspective, the Calculus of Inductive Constructions is an instance of a purely functional programming language. This means that a program in Lean is simply an expression whose value is determined compositionally from the values of the other expressions it refers to, independent of any sort of ambient state of computation. There is no notion of storing a result in memory or changing the value of a global variable; computation is just evaluation of expressions. This paradigm makes it easier to reason about programs and verify their correctness. At the same time, we will see that Lean incorporates concepts and abstractions that make it feasible to use this paradigm in practice.</p>
+<p>The underlying foundational framework imposes one restriction that is alien to most programming languages, namely, that every program is terminating. So, for example, every &#8220;while&#8221; loop has to be explicitly bounded, though, of course, we can consider the result of iterating an arbitrary computation <code class="docutils literal notranslate"><span class="pre">n</span></code> times for any given natural number <code class="docutils literal notranslate"><span class="pre">n</span></code>. Lean provides flexible mechanisms for structural and well-founded recursion, allowing us to define functions in natural ways. At the same, the system provides complementary mechanisms for proving claims, using inductive principles that capture the structure of the function definitions.</p>
+<p>One novel feature of Lean is that its programming language is also a <em>metaprogramming language</em>, which is to say, it can be used to extend the functionality of Lean itself. To that end, Lean allows us to mark metaprograms with the keyword <cite>meta</cite>. This does two things:</p>
+<ul class="simple">
+<li>Metaprograms can use arbitrary recursive calls, with no concern for termination.</li>
+<li>Metaprograms can access <em>metaconstants</em>, that is, primitive functions and objects that are implemented internally in Lean and are not meant to be trusted by the foundational framework.</li>
+</ul>
+<p>To summarize, we can use Lean in any of the following ways:</p>
+<ul class="simple">
+<li>as a programming language</li>
+<li>as a system for verifying properties of programs</li>
+<li>as a system for writing metaprograms, that is, programs that extend the functionality of Lean itself</li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Programming in Lean</a></h1>
+
+
+
+
+
+
+
+
+<!-- <h3>Navigation</h3> -->
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="types_and_terms.html">2. Types and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic_programming.html">3. Basic Programming</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monads.html">4. Monads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_tactics.html">5. Writing Tactics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_automation.html">6. Writing Automation</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="programming_in_lean.pdf">PDF version</a></li>
+    
+    <li class="toctree-l1"><a href="https://leanprover.github.io/">Lean Home</a></li>
+    
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Jeremy Avigad and Simon Hudon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/introduction.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,404 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ascii" />
+    <title>3. Basic Programming &#8212; Programming in Lean 3.4.2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4. Monads" href="monads.html" />
+    <link rel="prev" title="2. Types and Terms" href="types_and_terms.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="basic-programming">
+<span id="id1"></span><h1>3. Basic Programming<a class="headerlink" href="#basic-programming" title="Permalink to this headline">&#182;</a></h1>
+<p>This chapter introduces the basics of using Lean as a programming language. It is not a proper introduction to programming, however. There are a number of good introductions to functional programming, including <a class="reference external" href="https://leanprover.github.io/theorem_proving_in_lean/">Learn You a Haskell for Great Good</a>. If functional programming is new to you, you might find it helpful to read another text and port the examples and exercises to Lean.</p>
+<div class="section" id="evaluating-expressions">
+<h2>3.1. Evaluating Expressions<a class="headerlink" href="#evaluating-expressions" title="Permalink to this headline">&#182;</a></h2>
+<p>When translating expressions to byte code, Lean&#8217;s virtual machine evaluator ignores type information entirely. The whole elaborate typing schema of the CIC serves to ensure that terms make sense, and mean what we think they mean. Type checking is entirely static: when evaluating a term <code class="docutils literal notranslate"><span class="pre">t</span></code> of type <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, the bytecode evaluator ignores <code class="docutils literal notranslate"><span class="pre">&#945;</span></code>, and simply computes the value of <code class="docutils literal notranslate"><span class="pre">t</span></code>, as described below. As noted above, any subexpressions of <code class="docutils literal notranslate"><span class="pre">t</span></code> whose type is an element of <code class="docutils literal notranslate"><span class="pre">Prop</span></code> are computationally irrelevant, and they are ignored too.</p>
+<p>The evaluation of expressions follows the computational rules of the CIC. In particular:</p>
+<ul class="simple">
+<li>To evaluate a function application <code class="docutils literal notranslate"><span class="pre">(&#955;</span> <span class="pre">x,</span> <span class="pre">s)</span> <span class="pre">t</span></code>, the bytecode evaluator evaluates <code class="docutils literal notranslate"><span class="pre">t</span></code>, and then evaluates <code class="docutils literal notranslate"><span class="pre">s</span></code> with <code class="docutils literal notranslate"><span class="pre">x</span></code> instantiated to <code class="docutils literal notranslate"><span class="pre">t</span></code>.</li>
+<li>To evaluate an eliminator for an inductively defined type &#8212; in other words, a function defined by pattern matching or recursion &#8212; the bytecode evaluator waits until all the arguments are given, evaluates the first one, and, on the basis of the result, applies the relevant case or recursive call.</li>
+</ul>
+<p>The evaluation strategy for function application is known as <em>eager evaluation</em>: when applying a function <code class="docutils literal notranslate"><span class="pre">f</span></code> to as sequence of arguments <code class="docutils literal notranslate"><span class="pre">t1</span></code> &#8230; <code class="docutils literal notranslate"><span class="pre">tn</span></code>, the arguments are evaluated first, and then the body of the function is evaluated with the results.</p>
+<p>We have already seen that Lean can evaluate expressions involving natural numbers, integers, lists, and booleans.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#eval%2022%20+%2077%20*%2011%0A#eval%20tt%20&amp;&amp;%20(ff%20%7C%7C%20tt)%0A#eval%20%5B1,%202,%203%5D%20++%204%20::%20%5B5,%206,%207%5D" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#eval</span> <span class="mi">22</span> <span class="bp">+</span> <span class="mi">77</span> <span class="bp">*</span> <span class="mi">11</span>
+<span class="k">#eval</span> <span class="n">tt</span> <span class="bp">&amp;&amp;</span> <span class="o">(</span><span class="n">ff</span> <span class="bp">||</span> <span class="n">tt</span><span class="o">)</span>
+<span class="k">#eval</span> <span class="o">[</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">3</span><span class="o">]</span> <span class="bp">++</span> <span class="mi">4</span> <span class="o">::</span> <span class="o">[</span><span class="mi">5</span><span class="o">,</span> <span class="mi">6</span><span class="o">,</span> <span class="mi">7</span><span class="o">]</span>
+</pre></div>
+</div>
+</div><p>Lean can evaluate conditional expressions:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#eval%20if%2011%20%3E%205%20%E2%88%A7%20ff%20then%2027%20else%2033%20+%2012%0A%0A#eval%20if%207%20%E2%88%88%20%5B1,%203,%205%5D%20then%20%22hooray!%22%20else%20%22awww...%22" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#eval</span> <span class="k">if</span> <span class="mi">11</span> <span class="bp">&gt;</span> <span class="mi">5</span> <span class="bp">&#8743;</span> <span class="n">ff</span> <span class="k">then</span> <span class="mi">27</span> <span class="k">else</span> <span class="mi">33</span> <span class="bp">+</span> <span class="mi">12</span>
+
+<span class="k">#eval</span> <span class="k">if</span> <span class="mi">7</span> <span class="bp">&#8712;</span> <span class="o">[</span><span class="mi">1</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">5</span><span class="o">]</span> <span class="k">then</span> <span class="s2">&quot;hooray!&quot;</span> <span class="k">else</span> <span class="s2">&quot;awww...&quot;</span>
+</pre></div>
+</div>
+</div><p>Here is a more interesting example:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20craps%20(roll%20:%20%E2%84%95)%20(come_out%20:%20bool)%20(point%20:%20%E2%84%95)%20:%20string%20:=%0Aif%20(come_out%20%E2%88%A7%20(roll%20=%207%20%E2%88%A8%20roll%20=%2011))%20%E2%88%A8%20(%C2%AC%20come_out%20%E2%88%A7%20roll%20=%20point)%20then%0A%20%20%22You%20win!%22%0Aelse%20if%20(come_out%20%E2%88%A7%20roll%20%E2%88%88%20%5B2,%203,%2012%5D)%20%E2%88%A8%20(%C2%AC%20come_out%20%E2%88%A7%20roll%20=%207)%20then%0A%20%20%22You%20lose!%22%0Aelse%0A%20%20%22Roll%20again.%22%0A%0A#eval%20craps%207%20tt%204%0A#eval%20craps%2011%20ff%202" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">craps</span> <span class="o">(</span><span class="n">roll</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">(</span><span class="n">come_out</span> <span class="o">:</span> <span class="n">bool</span><span class="o">)</span> <span class="o">(</span><span class="n">point</span> <span class="o">:</span> <span class="n">&#8469;</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">come_out</span> <span class="bp">&#8743;</span> <span class="o">(</span><span class="n">roll</span> <span class="bp">=</span> <span class="mi">7</span> <span class="bp">&#8744;</span> <span class="n">roll</span> <span class="bp">=</span> <span class="mi">11</span><span class="o">))</span> <span class="bp">&#8744;</span> <span class="o">(</span><span class="bp">&#172;</span> <span class="n">come_out</span> <span class="bp">&#8743;</span> <span class="n">roll</span> <span class="bp">=</span> <span class="n">point</span><span class="o">)</span> <span class="k">then</span>
+  <span class="s2">&quot;You win!&quot;</span>
+<span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">come_out</span> <span class="bp">&#8743;</span> <span class="n">roll</span> <span class="bp">&#8712;</span> <span class="o">[</span><span class="mi">2</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">12</span><span class="o">])</span> <span class="bp">&#8744;</span> <span class="o">(</span><span class="bp">&#172;</span> <span class="n">come_out</span> <span class="bp">&#8743;</span> <span class="n">roll</span> <span class="bp">=</span> <span class="mi">7</span><span class="o">)</span> <span class="k">then</span>
+  <span class="s2">&quot;You lose!&quot;</span>
+<span class="k">else</span>
+  <span class="s2">&quot;Roll again.&quot;</span>
+
+<span class="k">#eval</span> <span class="n">craps</span> <span class="mi">7</span> <span class="n">tt</span> <span class="mi">4</span>
+<span class="k">#eval</span> <span class="n">craps</span> <span class="mi">11</span> <span class="n">ff</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div><p>The standard library defines a number of common operations on lists:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=#eval%20list.range%20100%0A%0A#eval%20list.map%20(%CE%BB%20x,%20x%20*%20x)%20(list.range%20100)%0A%0A#eval%20list.filter%20(%CE%BB%20x,%20x%20%3E%2050)%20(list.range%20100)%0A%0A#eval%20list.foldl%20(+)%200%20(list.range%20100)" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#eval</span> <span class="n">list.range</span> <span class="mi">100</span>
+
+<span class="k">#eval</span> <span class="n">list.map</span> <span class="o">(</span><span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">list.range</span> <span class="mi">100</span><span class="o">)</span>
+
+<span class="k">#eval</span> <span class="n">list.filter</span> <span class="o">(</span><span class="bp">&#955;</span> <span class="n">x</span><span class="o">,</span> <span class="n">x</span> <span class="bp">&gt;</span> <span class="mi">50</span><span class="o">)</span> <span class="o">(</span><span class="n">list.range</span> <span class="mi">100</span><span class="o">)</span>
+
+<span class="k">#eval</span> <span class="n">list.foldl</span> <span class="o">(</span><span class="bp">+</span><span class="o">)</span> <span class="mi">0</span> <span class="o">(</span><span class="n">list.range</span> <span class="mi">100</span><span class="o">)</span>
+</pre></div>
+</div>
+</div><p>A <code class="docutils literal notranslate"><span class="pre">char</span></code> is a natural number that is less than 255. You can enter the character &#8220;A,&#8221; for example, by typing <code class="docutils literal notranslate"><span class="pre">'A'</span></code>. Lean defines some basic operations on characters:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=open%20char%0A%0A#eval%20to_lower%20'X'%0A#eval%20to_lower%20'x'%0A#eval%20to_lower%20'!'%0A%0A#eval%20to_lower%20'!'%0A%0A#eval%20if%20is_punctuation%20'?'%20then%20tt%20else%20ff" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">open</span> <span class="n">char</span>
+
+<span class="k">#eval</span> <span class="n">to_lower</span> <span class="sc">&#39;X&#39;</span>
+<span class="k">#eval</span> <span class="n">to_lower</span> <span class="sc">&#39;x&#39;</span>
+<span class="k">#eval</span> <span class="n">to_lower</span> <span class="sc">&#39;!&#39;</span>
+
+<span class="k">#eval</span> <span class="n">to_lower</span> <span class="sc">&#39;!&#39;</span>
+
+<span class="k">#eval</span> <span class="k">if</span> <span class="n">is_punctuation</span> <span class="sc">&#39;?&#39;</span> <span class="k">then</span> <span class="n">tt</span> <span class="k">else</span> <span class="n">ff</span>
+</pre></div>
+</div>
+</div><p>In the example above, we have to tell Lean how to define a decision procedure for the predicate <code class="docutils literal notranslate"><span class="pre">is_punctuation</span></code>. We do this simply by unfolding the definition and asking Lean to use the inferred decision procedure for list membership.</p>
+<p>Strings can be mapped to lists of characters and back, so operations on lists and be used with strings.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20string%0A%0Adef%20filter%20(p%20:%20char%20%E2%86%92%20Prop)%20%5Bdecidable_pred%20p%5D%20(s%20:%20string)%20:%20string%20:=%0A((s.to_list).filter%20p).as_string%0A%0Adef%20map%20(f%20:%20char%20%E2%86%92%20char)%20(l%20:%20string)%20:%20string%20:=%0A(l.to_list.map%20f).as_string%0A%0Adef%20to_lower%20(s%20:%20string)%20:%20string%20:=%20s.map%20char.to_lower%0A%0Adef%20reverse%20(s%20:%20string)%20:%20string%20:=%20s.to_list.reverse.as_string%0A%0Adef%20remove_punctuation%20(s%20:%20string)%20:%20string%20:=%0As.filter%20(%CE%BB%20c,%20%C2%AC%20char.is_punctuation%20c)%0A%0Aend%20string" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">namespace</span> <span class="n">string</span>
+
+<span class="kd">def</span> <span class="n">filter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">char</span> <span class="bp">&#8594;</span> <span class="kt">Prop</span><span class="o">)</span> <span class="o">[</span><span class="n">decidable_pred</span> <span class="n">p</span><span class="o">]</span> <span class="o">(</span><span class="n">s</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span>
+<span class="o">((</span><span class="n">s.to_list</span><span class="o">)</span><span class="bp">.</span><span class="n">filter</span> <span class="n">p</span><span class="o">)</span><span class="bp">.</span><span class="n">as_string</span>
+
+<span class="kd">def</span> <span class="n">map</span> <span class="o">(</span><span class="n">f</span> <span class="o">:</span> <span class="n">char</span> <span class="bp">&#8594;</span> <span class="n">char</span><span class="o">)</span> <span class="o">(</span><span class="n">l</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">l.to_list.map</span> <span class="n">f</span><span class="o">)</span><span class="bp">.</span><span class="n">as_string</span>
+
+<span class="kd">def</span> <span class="n">to_lower</span> <span class="o">(</span><span class="n">s</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span> <span class="n">s.map</span> <span class="n">char.to_lower</span>
+
+<span class="kd">def</span> <span class="n">reverse</span> <span class="o">(</span><span class="n">s</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span> <span class="n">s.to_list.reverse.as_string</span>
+
+<span class="kd">def</span> <span class="n">remove_punctuation</span> <span class="o">(</span><span class="n">s</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">string</span> <span class="o">:=</span>
+<span class="n">s.filter</span> <span class="o">(</span><span class="bp">&#955;</span> <span class="n">c</span><span class="o">,</span> <span class="bp">&#172;</span> <span class="n">char.is_punctuation</span> <span class="n">c</span><span class="o">)</span>
+
+<span class="kd">end</span> <span class="n">string</span>
+</pre></div>
+</div>
+</div><p>We can use these to write a procedure that tests to see whether a given sentence is a palindrome.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20string%0A%0Adef%20filter%20(p%20:%20char%20%E2%86%92%20Prop)%20%5Bdecidable_pred%20p%5D%20(s%20:%20string)%20:%20string%20:=%0A((s.to_list).filter%20p).as_string%0A%0Adef%20map%20(f%20:%20char%20%E2%86%92%20char)%20(l%20:%20string)%20:%20string%20:=%0A(l.to_list.map%20f).as_string%0A%0Adef%20to_lower%20(s%20:%20string)%20:%20string%20:=%20s.map%20char.to_lower%0A%0Adef%20reverse%20(s%20:%20string)%20:%20string%20:=%20s.to_list.reverse.as_string%0A%0Adef%20remove_punctuation%20(s%20:%20string)%20:%20string%20:=%0As.filter%20(%CE%BB%20c,%20%C2%AC%20char.is_punctuation%20c)%0A%0A--%20BEGIN%0Adef%20test_palindrome%20(s%20:%20string)%20:%20bool%20:=%0Alet%20s'%20:=%20to_lower%20(remove_punctuation%20s)%20in%0Aif%20s'%20=%20reverse%20s'%20then%20tt%20else%20ff%0A%0A#eval%20test_palindrome%20%22A%20man,%20a%20plan,%20a%20canal%20--%20Panama!%22%0A#eval%20test_palindrome%20%22Madam,%20I'm%20Adam!%22%0A#eval%20test_palindrome%20%22This%20one%20is%20not%20even%20close.%22%0A--%20END%0A%0Aend%20string" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">test_palindrome</span> <span class="o">(</span><span class="n">s</span> <span class="o">:</span> <span class="n">string</span><span class="o">)</span> <span class="o">:</span> <span class="n">bool</span> <span class="o">:=</span>
+<span class="k">let</span> <span class="n">s&#39;</span> <span class="o">:=</span> <span class="n">to_lower</span> <span class="o">(</span><span class="n">remove_punctuation</span> <span class="n">s</span><span class="o">)</span> <span class="k">in</span>
+<span class="k">if</span> <span class="n">s&#39;</span> <span class="bp">=</span> <span class="n">reverse</span> <span class="n">s&#39;</span> <span class="k">then</span> <span class="n">tt</span> <span class="k">else</span> <span class="n">ff</span>
+
+<span class="k">#eval</span> <span class="n">test_palindrome</span> <span class="s2">&quot;A man, a plan, a canal -- Panama!&quot;</span>
+<span class="k">#eval</span> <span class="n">test_palindrome</span> <span class="s2">&quot;Madam, I&#39;m Adam!&quot;</span>
+<span class="k">#eval</span> <span class="n">test_palindrome</span> <span class="s2">&quot;This one is not even close.&quot;</span>
+</pre></div>
+</div>
+</div></div>
+<div class="section" id="recursive-definitions">
+<span id="id2"></span><h2>3.2. Recursive Definitions<a class="headerlink" href="#recursive-definitions" title="Permalink to this headline">&#182;</a></h2>
+<p>Lean supports definition of functions by structural recursion on its arguments.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=open%20nat%0A%0Adef%20fact%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%0A%7C%200%20%20%20%20%20%20%20%20:=%201%0A%7C%20(succ%20n)%20:=%20(succ%20n)%20*%20fact%20n%0A%0A#eval%20fact%20100" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">open</span> <span class="n">nat</span>
+
+<span class="kd">def</span> <span class="n">fact</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>        <span class="o">:=</span> <span class="mi">1</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">succ</span> <span class="n">n</span><span class="o">)</span> <span class="o">:=</span> <span class="o">(</span><span class="n">succ</span> <span class="n">n</span><span class="o">)</span> <span class="bp">*</span> <span class="n">fact</span> <span class="n">n</span>
+
+<span class="k">#eval</span> <span class="n">fact</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div><p>Lean recognizes that addition on the natural numbers is defined in terms of the <code class="docutils literal notranslate"><span class="pre">succ</span></code> constructor, so you can also use more conventional mathematical notation.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20fact%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%0A%7C%200%20%20%20%20%20:=%201%0A%7C%20(n+1)%20:=%20(n+1)%20*%20fact%20n" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">fact</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>     <span class="o">:=</span> <span class="mi">1</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="o">:=</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="bp">*</span> <span class="n">fact</span> <span class="n">n</span>
+</pre></div>
+</div>
+</div><p>Lean will compile definitions like these down to the primitives of the Calculus of Inductive Constructions, though in the case of <code class="docutils literal notranslate"><span class="pre">fact</span></code> it is straightforward to define it from the primitive recursion principle directly.</p>
+<p>Lean&#8217;s function definition system can handle more elaborate forms of pattern matching with defaults. For example, the following function returns true if and only if one of its arguments is positive.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20foo%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%20%E2%86%92%20%E2%84%95%20%E2%86%92%20bool%0A%7C%20(n+1)%20_%20%20%20%20%20%20_%20%20%20%20%20:=%20tt%0A%7C%20_%20%20%20%20%20(m+1)%20%20_%20%20%20%20%20:=%20tt%0A%7C%20_%20%20%20%20%20%20_%20%20%20%20%20(k+1)%20:=%20tt%0A%7C%20_%20%20%20%20%20%20_%20%20%20%20%20%20%20%20_%20%20:=%20ff" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">foo</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">bool</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="n">_</span>      <span class="n">_</span>     <span class="o">:=</span> <span class="n">tt</span>
+<span class="bp">|</span> <span class="n">_</span>     <span class="o">(</span><span class="n">m</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span>  <span class="n">_</span>     <span class="o">:=</span> <span class="n">tt</span>
+<span class="bp">|</span> <span class="n">_</span>      <span class="n">_</span>     <span class="o">(</span><span class="n">k</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="o">:=</span> <span class="n">tt</span>
+<span class="bp">|</span> <span class="n">_</span>      <span class="n">_</span>        <span class="n">_</span>  <span class="o">:=</span> <span class="n">ff</span>
+</pre></div>
+</div>
+</div><p>We can define the sequence of Fibonacci numbers in a natural way:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20fib%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%0A%7C%200%20%20%20%20%20:=%201%0A%7C%201%20%20%20%20%20:=%201%0A%7C%20(n+2)%20:=%20fib%20(n+1)%20+%20fib%20n%0A%0A#eval%20fib%2010" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">fib</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>     <span class="o">:=</span> <span class="mi">1</span>
+<span class="bp">|</span> <span class="mi">1</span>     <span class="o">:=</span> <span class="mi">1</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">2</span><span class="o">)</span> <span class="o">:=</span> <span class="n">fib</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="bp">+</span> <span class="n">fib</span> <span class="n">n</span>
+
+<span class="k">#eval</span> <span class="n">fib</span> <span class="mi">10</span>
+</pre></div>
+</div>
+</div><p>When evaluating <code class="docutils literal notranslate"><span class="pre">fib</span></code>, the virtual machine uses the defining equations. As a result, this naive implementation runs in exponential time, since the computation of <code class="docutils literal notranslate"><span class="pre">fib</span> <span class="pre">(n+2)</span></code> calls for two independent computations of <code class="docutils literal notranslate"><span class="pre">fib</span> <span class="pre">n</span></code>, one hidden in the computation of <code class="docutils literal notranslate"><span class="pre">fib</span> <span class="pre">(n+1)</span></code>. The following more efficient version defines an auxiliary function that computes the values in pairs:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20fib_aux%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%20%C3%97%20%E2%84%95%0A%7C%200%20%20%20%20%20:=%20(0,%201)%0A%7C%20(n+1)%20:=%20let%20p%20:=%20fib_aux%20n%20in%20(p.snd,%20p.fst%20+%20p.snd)%0A%0Adef%20fib%20(n)%20:=%20(fib_aux%20n).snd%0A%0A#eval%20fib%201000" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">fib_aux</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="bp">&#215;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>     <span class="o">:=</span> <span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">1</span><span class="o">)</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="o">:=</span> <span class="k">let</span> <span class="n">p</span> <span class="o">:=</span> <span class="n">fib_aux</span> <span class="n">n</span> <span class="k">in</span> <span class="o">(</span><span class="n">p.snd</span><span class="o">,</span> <span class="n">p.fst</span> <span class="bp">+</span> <span class="n">p.snd</span><span class="o">)</span>
+
+<span class="kd">def</span> <span class="n">fib</span> <span class="o">(</span><span class="n">n</span><span class="o">)</span> <span class="o">:=</span> <span class="o">(</span><span class="n">fib_aux</span> <span class="n">n</span><span class="o">)</span><span class="bp">.</span><span class="n">snd</span>
+
+<span class="k">#eval</span> <span class="n">fib</span> <span class="mi">1000</span>
+</pre></div>
+</div>
+</div><p>A similar solution is to use additional arguments to accumulate partial results:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=def%20fib_aux%20:%20%E2%84%95%20%E2%86%92%20%E2%84%95%20%E2%86%92%20%E2%84%95%20%E2%86%92%20%E2%84%95%0A%7C%200%20%20%20%20%20a%20b%20:=%20b%0A%7C%20(n+1)%20a%20b%20:=%20fib_aux%20n%20b%20(a+b)%0A%0Adef%20fib%20(n)%20:=%20fib_aux%20n%200%201%0A%0A#eval%20fib%201000" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">fib_aux</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">&#8469;</span>
+<span class="bp">|</span> <span class="mi">0</span>     <span class="n">a</span> <span class="n">b</span> <span class="o">:=</span> <span class="n">b</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="n">a</span> <span class="n">b</span> <span class="o">:=</span> <span class="n">fib_aux</span> <span class="n">n</span> <span class="n">b</span> <span class="o">(</span><span class="n">a</span><span class="bp">+</span><span class="n">b</span><span class="o">)</span>
+
+<span class="kd">def</span> <span class="n">fib</span> <span class="o">(</span><span class="n">n</span><span class="o">)</span> <span class="o">:=</span> <span class="n">fib_aux</span> <span class="n">n</span> <span class="mi">0</span> <span class="mi">1</span>
+
+<span class="k">#eval</span> <span class="n">fib</span> <span class="mi">1000</span>
+</pre></div>
+</div>
+</div><p>Functions on lists are naturally defined by structural recursion. These definitions are taken from the standard library:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0Aopen%20list%0A%0A--%20BEGIN%0Auniverse%20u%0Avariable%20%7B%CE%B1%20:%20Type%20u%7D%0A%0Adef%20append%20:%20list%20%CE%B1%20%E2%86%92%20list%20%CE%B1%20%E2%86%92%20list%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20%20%20l%20:=%20l%0A%7C%20(h%20::%20s)%20t%20:=%20h%20::%20(append%20s%20t)%0A%0Adef%20mem%20:%20%CE%B1%20%E2%86%92%20list%20%CE%B1%20%E2%86%92%20Prop%0A%7C%20a%20%5B%5D%20%20%20%20%20%20%20:=%20false%0A%7C%20a%20(b%20::%20l)%20:=%20a%20=%20b%20%E2%88%A8%20mem%20a%20l%0A%0Adef%20concat%20:%20list%20%CE%B1%20%E2%86%92%20%CE%B1%20%E2%86%92%20list%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20a%20:=%20%5Ba%5D%0A%7C%20(b::l)%20a%20:=%20b%20::%20concat%20l%20a%0A%0Adef%20length%20:%20list%20%CE%B1%20%E2%86%92%20nat%0A%7C%20%5B%5D%20%20%20%20%20%20%20:=%200%0A%7C%20(a%20::%20l)%20:=%20length%20l%20+%201%0A%0Adef%20empty%20:%20list%20%CE%B1%20%E2%86%92%20bool%0A%7C%20%5B%5D%20%20%20%20%20%20%20:=%20tt%0A%7C%20(_%20::%20_)%20:=%20ff%0A%0A--%20END%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">variable</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span>
+
+<span class="kd">def</span> <span class="n">append</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">[]</span>       <span class="n">l</span> <span class="o">:=</span> <span class="n">l</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">h</span> <span class="o">::</span> <span class="n">s</span><span class="o">)</span> <span class="n">t</span> <span class="o">:=</span> <span class="n">h</span> <span class="o">::</span> <span class="o">(</span><span class="n">append</span> <span class="n">s</span> <span class="n">t</span><span class="o">)</span>
+
+<span class="kd">def</span> <span class="n">mem</span> <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="kt">Prop</span>
+<span class="bp">|</span> <span class="n">a</span> <span class="o">[]</span>       <span class="o">:=</span> <span class="n">false</span>
+<span class="bp">|</span> <span class="n">a</span> <span class="o">(</span><span class="n">b</span> <span class="o">::</span> <span class="n">l</span><span class="o">)</span> <span class="o">:=</span> <span class="n">a</span> <span class="bp">=</span> <span class="n">b</span> <span class="bp">&#8744;</span> <span class="n">mem</span> <span class="n">a</span> <span class="n">l</span>
+
+<span class="kd">def</span> <span class="n">concat</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">list</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">[]</span>     <span class="n">a</span> <span class="o">:=</span> <span class="o">[</span><span class="n">a</span><span class="o">]</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">b</span><span class="o">::</span><span class="n">l</span><span class="o">)</span> <span class="n">a</span> <span class="o">:=</span> <span class="n">b</span> <span class="o">::</span> <span class="n">concat</span> <span class="n">l</span> <span class="n">a</span>
+
+<span class="kd">def</span> <span class="n">length</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">nat</span>
+<span class="bp">|</span> <span class="o">[]</span>       <span class="o">:=</span> <span class="mi">0</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">a</span> <span class="o">::</span> <span class="n">l</span><span class="o">)</span> <span class="o">:=</span> <span class="n">length</span> <span class="n">l</span> <span class="bp">+</span> <span class="mi">1</span>
+
+<span class="kd">def</span> <span class="n">empty</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">bool</span>
+<span class="bp">|</span> <span class="o">[]</span>       <span class="o">:=</span> <span class="n">tt</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">_</span> <span class="o">::</span> <span class="n">_</span><span class="o">)</span> <span class="o">:=</span> <span class="n">ff</span>
+</pre></div>
+</div>
+</div><p>Notice that <code class="docutils literal notranslate"><span class="pre">mem</span></code> defines a predicate on lists, which is to say, <code class="docutils literal notranslate"><span class="pre">mem</span> <span class="pre">a</span> <span class="pre">l</span></code> asserts that <code class="docutils literal notranslate"><span class="pre">a</span></code> is a member of the list <code class="docutils literal notranslate"><span class="pre">l</span></code>. To use it computationally, say, in an if-then-else clause, one needs to establish that this instance is decidable, or (what comes to essentially the same thing) define a version that takes values in type <code class="docutils literal notranslate"><span class="pre">bool</span></code> instead.</p>
+</div>
+<div class="section" id="inhabited-types-subtypes-and-option-types">
+<h2>3.3. Inhabited Types, Subtypes, and Option Types<a class="headerlink" href="#inhabited-types-subtypes-and-option-types" title="Permalink to this headline">&#182;</a></h2>
+<p>In the Calculus of Inductive Constructions, every term denotes something. In particular, if <code class="docutils literal notranslate"><span class="pre">f</span></code> has a function type and <code class="docutils literal notranslate"><span class="pre">t</span></code> has the corresponding argument type, the <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">t</span></code> denotes some object. In other words, a function defined on a type has to be define on <em>every</em> element of that type, so that every function is total on its domain.</p>
+<p>It often happens that a function is naturally defined only on some elements of a type. For example, one can take the head of a list only if it is nonempty, and one can divide one rational number or real number by another as long as the second is nonzero. There are a number of ways of handling that in dependent type theory.</p>
+<p>The first, and simplest, is to totalize the function, by assigning an arbitrary or conveniently chosen value where the function would otherwise be undefined. For example, it is convenient to take <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">0</span></code> to be equal to <code class="docutils literal notranslate"><span class="pre">0</span></code>. A downside is that this can run counter to mathematical intuitions. But it does give a precise meaning to the division symbol, even if it is a nonconventional one. (The treatment of undefined values in ordinary mathematics is often ambiguous and sloppy anyhow.)</p>
+<p>It helps that the Lean standard library defines a type class, <code class="docutils literal notranslate"><span class="pre">inhabited</span> <span class="pre">&#945;</span></code>, that can be used to keep track of types that are known to have at least one element, and to infer such an element. The expressions <code class="docutils literal notranslate"><span class="pre">default</span> <span class="pre">&#945;</span></code> and <code class="docutils literal notranslate"><span class="pre">arbitrary</span> <span class="pre">&#945;</span></code> both denote the element that is inferred. The second is unfolded less eagerly by Lean&#8217;s elaborator, and should be used to indicate that you do not want to make any assumptions about the value returned (though ultimately nothing can stop a theory making use of the fact that the arbitrary element of nat, say, is chosen to be zero). The list library defines the <code class="docutils literal notranslate"><span class="pre">head</span></code> function as follows:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Avariable%20%7B%CE%B1%20:%20Type%20u%7D%0A%0Adef%20head%20%5Binhabited%20%CE%B1%5D%20:%20list%20%CE%B1%20%E2%86%92%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20%20%20:=%20default%20%CE%B1%0A%7C%20(a%20::%20l)%20:=%20a" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">universe</span> <span class="n">u</span>
+<span class="kd">variable</span> <span class="o">{</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">}</span>
+
+<span class="kd">def</span> <span class="n">head</span> <span class="o">[</span><span class="n">inhabited</span> <span class="n">&#945;</span><span class="o">]</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">[]</span>       <span class="o">:=</span> <span class="n">default</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">a</span> <span class="o">::</span> <span class="n">l</span><span class="o">)</span> <span class="o">:=</span> <span class="n">a</span>
+</pre></div>
+</div>
+</div><p>Another possibility is to add a precondition to the function. We can do this because in the CIC, an assertion can be treated as an argument to a function. The following function explicitly requires evidence that the argument <code class="docutils literal notranslate"><span class="pre">l</span></code> is not the empty list.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Avariable%20%7B%CE%B1%20:%20Type%20u%7D%0A%0A--%20BEGIN%0Adef%20first%20:%20%CE%A0%20(l%20:%20list%20%CE%B1),%20l%20%E2%89%A0%20%5B%5D%20%E2%86%92%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20%20%20%20h%20:=%20absurd%20rfl%20h%0A%7C%20(a%20::%20l%E2%82%80)%20h%20:=%20a%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">first</span> <span class="o">:</span> <span class="bp">&#928;</span> <span class="o">(</span><span class="n">l</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span><span class="o">),</span> <span class="n">l</span> <span class="bp">&#8800;</span> <span class="o">[]</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">[]</span>        <span class="n">h</span> <span class="o">:=</span> <span class="n">absurd</span> <span class="n">rfl</span> <span class="n">h</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">a</span> <span class="o">::</span> <span class="n">l&#8320;</span><span class="o">)</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">a</span>
+</pre></div>
+</div>
+</div><p>This contract ensures that <code class="docutils literal notranslate"><span class="pre">first</span></code> will never be called to evaluate the first element of an empty list. The check is entirely static; the evidence is ignored by the bytecode evaluator.</p>
+<p>A closely related solution is to use a <code class="docutils literal notranslate"><span class="pre">subtype</span></code>. This simply bundles together the data and the precondition.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Avariable%20%7B%CE%B1%20:%20Type%20u%7D%0A%0Adef%20first%20:%20%CE%A0%20(l%20:%20list%20%CE%B1),%20l%20%E2%89%A0%20%5B%5D%20%E2%86%92%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20%20%20%20h%20:=%20absurd%20rfl%20h%0A%7C%20(a%20::%20l%E2%82%80)%20h%20:=%20a%0A%0A--%20BEGIN%0Adef%20first'%20:%20%7Bl%E2%82%80%20//%20l%E2%82%80%20%E2%89%A0%20%5B%5D%7D%20%E2%86%92%20%CE%B1%20:=%0A%CE%BB%20l,%20first%20l.1%20l.2%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">first&#39;</span> <span class="o">:</span> <span class="o">{</span><span class="n">l&#8320;</span> <span class="bp">//</span> <span class="n">l&#8320;</span> <span class="bp">&#8800;</span> <span class="o">[]}</span> <span class="bp">&#8594;</span> <span class="n">&#945;</span> <span class="o">:=</span>
+<span class="bp">&#955;</span> <span class="n">l</span><span class="o">,</span> <span class="n">first</span> <span class="n">l.1</span> <span class="n">l.2</span>
+</pre></div>
+</div>
+</div><p>Here, the type <code class="docutils literal notranslate"><span class="pre">{l&#8320;</span> <span class="pre">//</span> <span class="pre">l&#8320;</span> <span class="pre">&#8800;</span> <span class="pre">[]}</span></code> consists of (dependent) pairs, where the first element is a list and the second is evidence that the list is nonempty. In a similar way, <code class="docutils literal notranslate"><span class="pre">{n</span> <span class="pre">//</span> <span class="pre">(n</span> <span class="pre">:</span> <span class="pre">&#8484;)</span> <span class="pre">&gt;</span> <span class="pre">0}</span></code> denotes the type of positive integers. Using subtypes and preconditions can be inconvenient at times, because using them requires a mixture of proof and calculation. But subtypes are especially useful when the constraints are common enough that is pays to develop a library of functions that take and return elements satisfying them &#8212; in other words, when the subtype is really worthy of being considered a type in its own right.</p>
+<p>Yet another solution is to signal the success or failure of the function on the output, using an <code class="docutils literal notranslate"><span class="pre">option</span></code> type. This is defined in the standard library as follows:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=namespace%20hidden%0A%0Auniverse%20u%0A%0A--%20BEGIN%0Ainductive%20option%20(%CE%B1%20:%20Type%20u)%0A%7C%20none%20%7B%7D%20:%20option%0A%7C%20some%20%20%20%20:%20%CE%B1%20%E2%86%92%20option%0A--%20END%0A%0Aend%20hidden" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">inductive</span> <span class="n">option</span> <span class="o">(</span><span class="n">&#945;</span> <span class="o">:</span> <span class="kt">Type</span> <span class="n">u</span><span class="o">)</span>
+<span class="bp">|</span> <span class="n">none</span> <span class="o">{}</span> <span class="o">:</span> <span class="n">option</span>
+<span class="bp">|</span> <span class="n">some</span>    <span class="o">:</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">option</span>
+</pre></div>
+</div>
+</div><p>You can think of the return value <code class="docutils literal notranslate"><span class="pre">none</span></code> as signifying that the function is undefined at that point, whereas <code class="docutils literal notranslate"><span class="pre">some</span> <span class="pre">a</span></code> denotes a return value of <code class="docutils literal notranslate"><span class="pre">a</span></code>. (The inscription <code class="docutils literal notranslate"><span class="pre">{}</span></code> after the none constructor indicates that the argument <code class="docutils literal notranslate"><span class="pre">&#945;</span></code> should be marked implicit, even though it cannot be inferred from other arguments.) For example, then <code class="docutils literal notranslate"><span class="pre">nth</span></code> element function is defined in the list library as follows:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=universe%20u%0Avariables%20%7B%CE%B1%20:%20Type%20u%7D%20%5Binhabited%20%CE%B1%5D%0A%0Aopen%20option%20nat%0A%0A--%20BEGIN%0Adef%20nth%20:%20list%20%CE%B1%20%E2%86%92%20nat%20%E2%86%92%20option%20%CE%B1%0A%7C%20%5B%5D%20%20%20%20%20%20%20n%20%20%20%20%20:=%20none%0A%7C%20(a%20::%20l)%200%20%20%20%20%20:=%20some%20a%0A%7C%20(a%20::%20l)%20(n+1)%20:=%20nth%20l%20n%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kd">def</span> <span class="n">nth</span> <span class="o">:</span> <span class="n">list</span> <span class="n">&#945;</span> <span class="bp">&#8594;</span> <span class="n">nat</span> <span class="bp">&#8594;</span> <span class="n">option</span> <span class="n">&#945;</span>
+<span class="bp">|</span> <span class="o">[]</span>       <span class="n">n</span>     <span class="o">:=</span> <span class="n">none</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">a</span> <span class="o">::</span> <span class="n">l</span><span class="o">)</span> <span class="mi">0</span>     <span class="o">:=</span> <span class="n">some</span> <span class="n">a</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">a</span> <span class="o">::</span> <span class="n">l</span><span class="o">)</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="o">:=</span> <span class="n">nth</span> <span class="n">l</span> <span class="n">n</span>
+</pre></div>
+</div>
+</div><p>To use an element <code class="docutils literal notranslate"><span class="pre">oa</span></code> of type <code class="docutils literal notranslate"><span class="pre">option</span> <span class="pre">&#945;</span></code>, one typically has to pattern match on the cases <code class="docutils literal notranslate"><span class="pre">none</span></code> and <code class="docutils literal notranslate"><span class="pre">some</span> <span class="pre">&#945;</span></code>. Doing this manually in the course of a computation can be tedious, but it is much more pleasant and natural using <em>monads</em>, which we turn to next.</p>
+</div>
+<div class="section" id="input-and-output">
+<h2>3.4. Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">&#182;</a></h2>
+<p>Lean can support programs that interact with the outside  world, querying users for input and presenting them with output during the course of a computation. Lean&#8217;s foundational framework has no model of &#8220;the real world,&#8221; but Lean declares <code class="docutils literal notranslate"><span class="pre">get_str</span></code> and <code class="docutils literal notranslate"><span class="pre">put_str</span></code> commands to get an input string from the user and write an input string to output, respectively. Within the foundational system, these are treated as black box operations. But when programs are evaluated by Lean&#8217;s virtual machine or when they are translated to C++, they have the expected behavior. Here, for example, is a program that prints &#8220;hello world&#8221;:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=import%20system.io%0Aopen%20io%0A%0Adef%20hello_world%20:%20io%20unit%20:=%0Aput_str%20%22hello%20world%5Cn%22%0A%0A#eval%20hello_world" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">import</span> <span class="n">system.io</span>
+<span class="kn">open</span> <span class="n">io</span>
+
+<span class="kd">def</span> <span class="n">hello_world</span> <span class="o">:</span> <span class="n">io</span> <span class="n">unit</span> <span class="o">:=</span>
+<span class="n">put_str</span> <span class="s2">&quot;hello world</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+<span class="k">#eval</span> <span class="n">hello_world</span>
+</pre></div>
+</div>
+</div><p>The next example prints the first 100 squares:</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=import%20system.io%0Aopen%20io%0A%0Adef%20print_squares%20:%20%E2%84%95%20%E2%86%92%20io%20unit%0A%7C%200%20%20%20%20%20:=%20return%20()%0A%7C%20(n+1)%20:=%20print_squares%20n%20%3E%3E%0A%20%20%20%20%20%20%20%20%20%20%20put_str%20(to_string%20n%20++%20%22%5E2%20=%20%22%20++%0A%20%20%20%20%20%20%20%20%20%20%20%20%20to_string%20(n%20*%20n)%20++%20%22%5Cn%22)%0A%0A#eval%20print_squares%20100" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="kn">import</span> <span class="n">system.io</span>
+<span class="kn">open</span> <span class="n">io</span>
+
+<span class="kd">def</span> <span class="n">print_squares</span> <span class="o">:</span> <span class="n">&#8469;</span> <span class="bp">&#8594;</span> <span class="n">io</span> <span class="n">unit</span>
+<span class="bp">|</span> <span class="mi">0</span>     <span class="o">:=</span> <span class="n">return</span> <span class="o">()</span>
+<span class="bp">|</span> <span class="o">(</span><span class="n">n</span><span class="bp">+</span><span class="mi">1</span><span class="o">)</span> <span class="o">:=</span> <span class="n">print_squares</span> <span class="n">n</span> <span class="bp">&gt;&gt;</span>
+           <span class="n">put_str</span> <span class="o">(</span><span class="n">to_string</span> <span class="n">n</span> <span class="bp">++</span> <span class="s2">&quot;^2 = &quot;</span> <span class="bp">++</span>
+             <span class="n">to_string</span> <span class="o">(</span><span class="n">n</span> <span class="bp">*</span> <span class="n">n</span><span class="o">)</span> <span class="bp">++</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">)</span>
+
+<span class="k">#eval</span> <span class="n">print_squares</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div><p>We will explain the data type <code class="docutils literal notranslate"><span class="pre">io</span> <span class="pre">unit</span></code> in <a class="reference internal" href="monads.html#monads"><span class="std std-numref">Chapter 4</span></a>. Although this program has a real world side effect of sending output to the screen when run, that effect is invisible to the formal foundation. The <code class="docutils literal notranslate"><span class="pre">print</span> <span class="pre">axioms</span></code> command shows that the expressions <code class="docutils literal notranslate"><span class="pre">hello_world</span></code> and <code class="docutils literal notranslate"><span class="pre">print_squares</span></code> depend on constants that have been added to the axiomatic foundation to implement the io primitives.</p>
+<div style="position: relative">
+<div style='position: absolute; right: 0; top: 0; padding: 1ex'><a href="https://leanprover.github.io/live/3.4.1/#code=import%20system.io%0Aopen%20io%0A%0Adef%20hello_world%20:%20io%20unit%20:=%0Aput_str%20%22hello%20world%5Cn%22%0A%0A--%20BEGIN%0A#print%20axioms%20hello_world%0A--%20END" target="_blank">
+try it!</a></div><div class="highlight-lean notranslate"><div class="highlight"><pre><span class="k">#print</span> <span class="kd">axioms</span> <span class="n">hello_world</span>
+</pre></div>
+</div>
+</div><p>Within the logical foundation, these constants are entirely opaque, objects about which that the axiomatic system has nothing to say. In this way, we can prove properties of programs involving <code class="docutils literal notranslate"><span class="pre">io</span></code> that do not depend in any way on the particular results of the input and output.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Programming in Lean</a></h1>
+
+
+
+
+
+
+
+
+<!-- <h3>Navigation</h3> -->
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="types_and_terms.html">2. Types and Terms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Basic Programming</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#evaluating-expressions">3.1. Evaluating Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recursive-definitions">3.2. Recursive Definitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inhabited-types-subtypes-and-option-types">3.3. Inhabited Types, Subtypes, and Option Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-and-output">3.4. Input and Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="monads.html">4. Monads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_tactics.html">5. Writing Tactics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_automation.html">6. Writing Automation</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="programming_in_lean.pdf">PDF version</a></li>
+    
+    <li class="toctree-l1"><a href="https://leanprover.github.io/">Lean Home</a></li>
+    
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Jeremy Avigad and Simon Hudon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/basic_programming.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
