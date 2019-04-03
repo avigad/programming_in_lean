@@ -10,8 +10,6 @@ The canonical way to invoke a tactic in Lean is to use the ``by`` keyword within
 
 .. code-block:: text
 
-   open tactic
-
    variables a b : Prop
 
    example : a → b → a ∧ b :=
@@ -35,20 +33,28 @@ When the tactic expression after a ``by`` is invoked, the tactic wakes up and sa
 
 One thing the tactic can do is print a message to the outside world:
 
-.. code-block:: text
+.. code-block:: lean
 
-   example : a → b → a ∧ b :=
-   by do trace "Hi, Mom!"
+   open tactic
 
-When the file is executed, Lean issues an error message to the effect that the tactic has failed to fill the relevant placeholder, which is what it is supposed to do. But the ``trace`` message is printed during the execution, providing us with a glimpse of its inner workings. We can actually trace value of any type that Lean can coerce to a string output, and we will see that this includes a number of useful types.
+   example (a b : Prop) : a → b → a ∧ b :=
+   by do trace "Hi, Mom!",
+      admit
+
+When the file is executed, Lean issues an error message to the effect that the tactic has failed to fill the relevant placeholder, which is what it is supposed to do. But the ``trace`` message is printed during the execution, providing us with a glimpse of its inner workings. We can actually trace value of any type that Lean can coerce to a string output, and we will see that this includes a number of useful types. The ``admit`` tactic is a tactic version of ``sorry``. Note that we use ``open tactic`` to open the ``tactic`` namespace and access the core tactic library. We will hide this line in the code snippets that follow.
 
 Another thing we can do is trace the current tactic state:
 
-.. code-block:: text
+.. code-block:: lean
 
-   example : a → b → a ∧ b :=
+   open tactic
+
+   -- BEGIN
+   example (a b : Prop) : a → b → a ∧ b :=
    by do trace "Hi, Mom!",
-         trace_state
+         trace_state,
+         admit
+   -- END
 
 Now the output includes the list of *goals* that are active in the tactic state, each with a local context that includes the local variables and hypotheses. In this case there is only one:
 
@@ -64,42 +70,57 @@ Let us dispense with the trace messages now, and start to prove the theorem by i
 
 .. code-block:: text
 
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
          skip
+
 
 The backticks indicate that ``h1`` and ``h2`` are *names*; we will discuss these below. The tactic ``skip`` is a do-nothing tactic, simply included to ensure that the resulting expression has type ``tactic unit``.
 
 We can now do some looking around. The ``meta_constant`` called ``target`` has type ``tactic expr``, and returns the type of the goal. The type ``expr``, like ``name``, will be discussed below; it is designed to reflect the internal representation of Lean expressions, so, roughly, via meta-programming glue, the ``expr`` type allows us to manipulate Lean expressions in Lean itself. In particular, we can ask the tactic to print the current goal:
 
-.. code-block:: text
+.. code-block:: lean
 
-   example : a → b → a ∧ b :=
+   open tactic
+
+   -- BEGIN
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
-         target >>= trace
+         target >>= trace,
+         admit
+   -- END
 
 In this case, the output is ``a ∧ b``, as we would expect. We can also ask the tactic to print the elements of the local context.
 
-.. code-block:: text
+.. code-block:: lean
 
-   example : a → b → a ∧ b :=
+   open tactic
+
+   -- BEGIN
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
-         local_context >>= trace
+         local_context >>= trace,
+         admit
+   -- END
 
 This yields the list ``[a, b, h1, h2]``. We already happen to have representations of ``h1`` and ``h2``, because they were returned by the ``intro`` tactic. But we can extract the other expressions in the local context given their names:
 
-.. code-block:: text
+.. code-block:: lean
 
-   example : a → b → a ∧ b :=
+   open tactic
+
+   -- BEGIN
+   example (a b : Prop) : a → b → a ∧ b :=
    by do intro `h1,
          intro `h2,
          ea ← get_local `a,
          eb ← get_local `b,
          trace (to_string ea ++ ", " ++ to_string eb),
-         skip
+         admit
+   -- END
 
 Notice that ``ea`` and ``eb`` are different from ``a`` and ``b``; they have type ``expr`` rather than ``Prop``. They are the internal representations of the latter expressions. At present, there is not much for us to do with these expressions other than print them out, so we will drop them for now.
 
@@ -109,10 +130,8 @@ In any case, to prove the goal, we can proceed to invoke any of the Lean's stand
 
    open tactic
 
-   variables a b : Prop
-
    -- BEGIN
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by do intro `h1,
          intro `h2,
          split,
@@ -125,10 +144,8 @@ We can also do it in a more hands-on way:
 
    open tactic
 
-   variables a b : Prop
-
    -- BEGIN
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
          mk_const ``and.intro >>= apply,
@@ -142,10 +159,8 @@ The double-backticks will also be explained below, but the general idea is that 
 
    open tactic
 
-   variables a b : Prop
-
    -- BEGIN
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
          applyc ``and.intro,
@@ -159,10 +174,8 @@ We can also finish the proof as follows:
 
    open tactic
 
-   variables a b : Prop
-
    -- BEGIN
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by do eh1 ← intro `h1,
          eh2 ← intro `h2,
          e ← to_expr ```(and.intro h1 h2),
@@ -177,8 +190,6 @@ The ``do`` block in this example has type ``tactic unit``, and can be broken out
 
    open tactic
 
-   variables a b : Prop
-
    -- BEGIN
    meta def my_tactic : tactic unit :=
    do eh1 ← intro `h1,
@@ -186,7 +197,7 @@ The ``do`` block in this example has type ``tactic unit``, and can be broken out
       e ← to_expr ``(and.intro %%eh1 %%eh2),
       exact e
 
-   example : a → b → a ∧ b :=
+   example (a b : Prop) : a → b → a ∧ b :=
    by my_tactic
    -- END
 
@@ -223,7 +234,7 @@ Now writing ``exact and.right h`` would make no sense. We could, alternatively, 
 
 Metaprogramming in Lean requires us to be mindful of and explicit about the distinction between expressions in the current environment, like ``h : a ∧ b`` in the hypothesis of the example, and the Lean objects that we use to act on the tactic state, such as the name "h" or an object of type ``expr``. Without using the ``begin...end`` front end, we can construct the proof as follows:
 
-.. code-block:: text
+.. code-block:: lean
 
    open tactic
 
@@ -388,7 +399,7 @@ Note that the backtick is used in two distinct ways: an expression of the form :
 
 Lean's pre-expression mechanism also supports the use of *anti-quotation*, which allows a tactic to tell the elaborator to insert an expression into a pre-expression at runtime. Returning to the example above, suppose we are in a situation where instead of the name ``h``, we have the corresponding *expression*, ``eh``, and want to use that to construct the term. We can insert it into the pre-expression by preceding it with a double-percent sign:
 
-.. code-block:: text
+.. code-block:: lean
 
    open tactic
 
@@ -400,9 +411,40 @@ Lean's pre-expression mechanism also supports the use of *anti-quotation*, which
       to_expr ``(and.left %%eh) >>= exact
    -- END
 
-When the tactic is executed, Lean elaborates the pre-expressions given by :literal:`\``(...)`, with the expression ``eh`` inserted in the right place. The difference between :literal:`\``(...)` and :literal:`\```(...)` is that the first resolves the names contained in the expression when the tactic is defined, whereas the second resolves them when the tactic is executed. Since the only name occurring in ``and.left %%eh`` is ``and.left``, it is better to resolve it right away. However, in the expression ``and.right h`` above, ``h`` only comes into existence when the tatic is executed, and so we need to use the triple backtick.
+When the tactic is executed, Lean elaborates the pre-expressions given by :literal:`\``(...)`, with the expression ``eh`` inserted in the right place. The difference between :literal:`\``(...)` and :literal:`\```(...)` is that the first resolves the names contained in the expression when the tactic is defined, whereas the second resolves them when the tactic is executed. Since the only name occurring in ``and.left %%eh`` is ``and.left``, it is better to resolve it right away. However, in the expression ``and.right h`` above, ``h`` only comes into existence when the tactic is executed, and so we need to use the triple backtick.
 
-[TODO: describe :literal:`\`(...)`, and improve the explanations]
+.. TODO: describe :literal:`\`(...)`, and improve the explanations
+
+Finally, Lean can handle pattern matching on pre-expressions. To do so, use a single backtick, and use antiquotations to introduce variables in the patterns. The following tactic retrieves the goal, and takes action depending on its form.
+
+.. code-block:: lean
+
+   open tactic
+
+   -- BEGIN
+   meta def do_something : tactic unit :=
+   do t ← target,
+      match t with
+      | `(%%a ∧ %%b) := split >> skip
+      | `(%%a → %%b) := do h ← get_unused_name "h",
+                           intro h,
+                           skip
+      | _            := try assumption
+      end
+
+   example (a b c : Prop) : a → b → a → a ∧ b :=
+   begin
+   do_something, do_something, do_something, do_something, do_something, do_something
+   end
+
+   example (a b c : Prop) : a → b → a → a ∧ b :=
+   begin
+   do_something, do_something, do_something, do_something, assumption, assumption
+   end
+
+   example (a b c : Prop) : a → b → a → a ∧ b :=
+   by repeat { do_something }
+   -- END
 
 Examples
 --------
@@ -446,7 +488,7 @@ One can even manipulate data structures that include tactics themselves. For exa
    | (t::ts) := t <|> first ts
    -- END
 
-It fails if none of the tactics on the list succeeds. Consider the example from :numref:`Chapter %s <Introduction>`:
+It fails if none of the tactics on the list succeeds. Consider the following example:
 
 .. code-block:: lean
 

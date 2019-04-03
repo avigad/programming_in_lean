@@ -372,7 +372,7 @@ We can finally explain how Lean handles input and output: the constant ``io`` is
    #check (@put_str : string → io unit)
    #check (@get_line : io string)
 
-The expression ``put_str s`` changes the ``io`` state by writing ``s`` to output; the return type, ``unit``, indicates that no meaningful value is returned. The expression ``put_nat n`` does the analogous thing for a natural number, ``n``. The expression ``get_line``, in contrast; however you want to think of the change in ``io`` state, a ``string`` value is returned inside the monad. When we use the native virtual machine interpretation, thinking of the ``io`` monad as representing a state is somewhat heuristic, since within the Lean language, there is nothing that we can say about it. But when we run a Lean program, the interpreter does the right thing whenever it encounters the bind and return operations for the monad, as well as the constants above. In particular, in the example below, it ensures that the argument to ``put_nat`` is evaluated before the output is sent to the user, and that the expressions are printed in the right order.
+The expression ``put_str s`` changes the ``io`` state by writing ``s`` to output; the return type, ``unit``, indicates that no meaningful value is returned. The expression ``get_line``, in contrast, does not take any arguments. However you want to think of the change in ``io`` state, a ``string`` value is returned inside the monad. When we use the native virtual machine interpretation, thinking of the ``io`` monad as representing a state is somewhat heuristic, since within the Lean language, there is nothing that we can say about it. But when we run a Lean program, the interpreter does the right thing whenever it encounters the bind and return operations for the monad, as well as the constants above. In particular, in the example below, it ensures that the argument to ``put_str`` is evaluated before the output is sent to the user, and that the expressions are printed in the right order.
 
 .. code-block:: lean
 
@@ -383,8 +383,7 @@ The expression ``put_str s`` changes the ``io`` state by writing ``s`` to output
    #eval put_str "hello " >> put_str "world!" >> put_str (to_string (27 * 39))
    -- END
 
-[TODO: somewhere – probably in a later chapter? – document the format
-type and operations.]
+.. TODO: somewhere – probably in a later chapter? – document the format type and operations.
 
 Related type classes
 --------------------
